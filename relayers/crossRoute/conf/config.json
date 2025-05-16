@@ -1,0 +1,53 @@
+{
+  "main": {
+    "apiIp": "",
+    "apiPort": "",
+    "isLeader": true,
+    "issueCollectionPath": "./invalidTrans/",
+    "crossTokens": {
+      "MATIC": {
+        "CONF": {
+          "nodeUrl": "https://polygon-rpc.com",
+          "agentAddr": "0x6a8299deccd420d5b6970d611afb25cc8e910220",
+          "multiSigThreshold": 1,
+          "maxGasPrice": 400,
+          "gasPriceDelta": 0,
+          "gasLimit": 2000000,
+          "transChainID": "137",
+          "chainID": "2147484614"
+        }
+      }
+    }
+  },
+  "testnet": {
+    "apiIp": "stellardemo.wanscan.org",
+    "apiPort": "6000",
+    "isLeader": true,
+    "issueCollectionPath": "./invalidTrans/test/",
+    "crossTokens": {
+      "MATIC": {
+        "CONF": {
+          "nodeUrl": "https://polygon-amoy.blockpi.network/v1/rpc/public",
+          "agentAddr": "0x6a8299deccd420d5b6970d611afb25cc8e910220",
+          "multiSigThreshold": 1,
+          "maxGasPrice": 50,
+          "gasPriceDelta": 10,
+          "gasLimit": 2000000,
+          "transChainID": "80002",
+          "chainID": "2147484614"
+        }
+      },
+      "XLM": {
+        "CONF": {
+          "nodeUrl": "https://horizon-testnet.stellar.org/",
+          "agentAddr": "0x6a8299deccd420d5b6970d611afb25cc8e910220",
+          "multiSigThreshold": 1,
+          "maxGasPrice": 50,
+          "gasPriceDelta": 10,
+          "gasLimit": 2000000,
+          "chainID": "2147483796"
+        }
+      }      
+    }
+  }
+}

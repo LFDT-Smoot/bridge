@@ -1,0 +1,15 @@
+{
+    "currentnet": "testnet",
+    "testnet": {
+        "mongoUrl": "mongodb://localhost:27017/stellar_eea_msgRouter",
+        "webPort": 9000,
+        "txSignTableName": "txSignTableName",
+        "pks" : [
+          "0421b1bf4c5b958d8158862f263b192555b0e1dae5d39a636b61229d91540cd985d55cd3bf01555e1279ae6332eb3955607a883b8e8a433b4095b499c1e25805d8"
+        ],
+        "signVerify":{
+          "XLM" : "Secp256k1Service",
+          "MATIC" : "Secp256k1Service"
+        }
+    }
+}
