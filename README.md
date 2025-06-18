@@ -115,10 +115,14 @@ The Smoot project maintainers have access to EEA private repositories as members
 
 # Slack, Discord, or Telegram
 
-The Smoot development team prefers using Telegram and emails for communications. Discord or Slack can also be considered.
+The Smoot development team prefers using Discord and emails for communications. Discord link is provided in the reference and link section.
 
-# References
+# References and Links
 
-EEA DLT Interoperability Specification: [https://entethalliance.org/specs/dlt-interop/](https://entethalliance.org/specs/dlt-interop/)  
-
+* EEA DLT Interoperability Specification: [https://entethalliance.org/specs/dlt-interop/](https://entethalliance.org/specs/dlt-interop/)  
+* LFDT Smoot blog: [Smoot overview blog](https://www.lfdecentralizedtrust.org/blog/meet-smoot-one-framework-to-connect-all-chains).
+* Smoot GitHub location:[https://github.com/LFDT-Smoot](https://github.com/LFDT-Smoot).
+* Smoot Discord location:[Smoot Discord Channel](https://discord.com/channels/905194001349627914/1369405582422835272).
+* Community Call Link:[Smoot Bi-weekly Community Call](https://zoom-lfx.platform.linuxfoundation.org/meetings/smoot?__hstc=120149271.ece5850e016b07e28ce7a64aed493b7e.1748445843693.1749736342491.1750222191816.8&__hssc=120149271.2.1750222191816&__hsfp=2583819296).
+* Meet Smoot Meetup Seminar Presentation:[Youtube Video Link}(https://www.youtube.com/watch?v=Hs2OLQNq1no).
 
