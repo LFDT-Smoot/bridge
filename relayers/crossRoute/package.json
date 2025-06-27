@@ -25,13 +25,13 @@
     "axios": "^1.7.2",
     "bip44-constants": "^313.0.0",
     "ethers": "^6.7.1",
-    "keythereum": "^1.0.4",
+    "keythereum": "^1.2.0",
     "lodash": "^4.17.21",
-    "mongoose": "^5.13.21",
+    "mongoose": "^6.13.6",
     "node-fetch": "^2.6.0",
     "optimist": "^0.6.1",
     "parse-url": "^9.2.0",
-    "web3": "1.2.9",
+    "web3": "4.16.0",
     "winston": "^3.3.3",
     "winston-daily-rotate-file": "^3.3.2"
   }
