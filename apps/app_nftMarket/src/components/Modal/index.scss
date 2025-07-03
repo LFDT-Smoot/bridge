@@ -1,0 +1,28 @@
+.ant-modal-content {
+  padding: 0 !important;
+  width: fit-content !important;
+  height: fit-content !important;
+  border-radius: 100px !important;
+  background: #242634 !important;
+}
+
+.react-modal-design {
+  .ant-modal {
+    top: unset;
+    bottom: 0;
+    position: absolute;
+    padding-bottom: 0;
+    margin: 0;
+    max-width: 100%;
+  }
+
+  .ant-modal-content {
+    border-radius: 100px 100px 0 0 !important;
+    width: 100% !important;
+  }
+}
+
+.ant-modal-root {
+  z-index: 2000;
+  position: relative;
+}

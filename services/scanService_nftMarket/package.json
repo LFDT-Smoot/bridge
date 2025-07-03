@@ -1,0 +1,26 @@
+{
+  "name": "scanchainservice",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@stellar/stellar-sdk": "^12.1.0",
+    "axios": "^1.7.2",
+    "dotenv": "^16.4.5",
+    "ethers": "5.7",
+    "express": "^4.19.2",
+    "fetch": "^1.1.0",
+    "lodash": "^4.17.21",
+    "mongoose": "^8.4.3",
+    "parse-url": "^9.2.0",
+    "tslib": "^2.6.3",
+    "web3": "^1.2.9",
+    "web3-eth-abi": "^4.2.2"
+  }
+}

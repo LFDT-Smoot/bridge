@@ -1,0 +1,8 @@
+
+
+scanedBlockInfo
+{
+  chainType: XML/MATIC,
+  scanedBlockNumber: ...
+}
+

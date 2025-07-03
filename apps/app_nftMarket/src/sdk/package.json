@@ -1,0 +1,32 @@
+{
+  "name": "nft-market-sdk",
+  "version": "1.1.0",
+  "description": "NFT Market SDK",
+  "repository": "git+https://github.com/wanchain/stellar_eea_internal.git",
+  "author": "wanchain <techsupport@wanchain.org>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "NFT",
+    "market"
+  ],
+  "bugs": {
+    "url": "https://github.com/wanchain/stellar_eea_internal/issues"
+  },
+  "homepage": "https://github.com/wanchain/stellar_eea_internal#readme",
+  "dependencies": {
+    "axios": "^1.7.2",
+    "multicoin-address-validator": "^0.5.18",
+    "web3": "1.8.1",
+    "bignumber.js": "^9.1.2",
+    "@makerdao/multicall": "^0.12.0",
+    "@stellar/freighter-api": "^2.0.0",
+    "@stellar/stellar-sdk": "^12.1.0"
+  }
+}
