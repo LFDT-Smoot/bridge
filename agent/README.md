@@ -1,0 +1,1 @@
+message cross between chains. On first step, Stellar and Polygon were supported.

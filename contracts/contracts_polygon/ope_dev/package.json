@@ -1,0 +1,18 @@
+{
+  "name": "ope_dev",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "ethereumjs-util": "^6.2.1",
+    "ethers": "^6.14.3",
+    "web3": "^1.10.4"
+  }
+}
