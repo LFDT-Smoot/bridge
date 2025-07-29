@@ -73,11 +73,11 @@ module.exports = class ScanStellarService extends ScanChainBase {
       if(!txMeta) {
         // to get tx meta data
         const txInfo = await this.client.getTransactionDetails(tx.hash);
-        console.log("\n\n...txInfo: ", txInfo);
+        // console.log("\n\n...txInfo: ", txInfo);
         txMeta = txInfo.resultMetaXdr;
       }
-      console.log("\n\n...tx resultMetaXdr: ", txMeta);
-      console.log("\n\n...tx result_meta_xdr: ", tx.result_meta_xdr);
+      console.log("\n...tx resultMetaXdr is empty?: ", !!!txMeta);
+      console.log("\n...tx result_meta_xdr is empty?: ", !!!tx.result_meta_xdr);
 
       if(!txMeta){
         continue;

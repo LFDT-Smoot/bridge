@@ -40,8 +40,6 @@ async function get_all_events(result_meta_xdr_base64) {
     const topics = node_of_eventBody.v0.topics;
     let data = node_of_eventBody.v0.data;
     data = data.vec ? data.vec : data;
-    console.log("isPlainObject(data)", isPlainObject(data));
-    console.log("isArray(data)", isArray(data));
     return {contractId, topics, data};
   }
 
