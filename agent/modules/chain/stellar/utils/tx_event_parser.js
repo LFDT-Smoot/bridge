@@ -70,7 +70,7 @@ function get_nodes_of_events(xdrJsonStr) {
  * @param expected_contractId   which contract emitted this event
  * @param expected_topics  array of topic elements to match.
  */
-function get_events_data_by(events, expected_contractId, expected_topics) {
+function get_wmb_gate_events_data(events, expected_contractId, expected_topics) {
   let result = [];
   events.map(e => {
     if(e.contractId === expected_contractId) {
@@ -116,6 +116,6 @@ function get_events_data_by(events, expected_contractId, expected_topics) {
 }
 
 exports.eventParser = get_all_events;
-exports.get_events_data_by = get_events_data_by;
+exports.get_wmb_gate_events_data = get_wmb_gate_events_data;
 
 

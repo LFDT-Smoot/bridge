@@ -11,7 +11,7 @@ const sorobanClient = require('./utils/client_soroban')
 const HorizonClient = require("./utils/client_horizon");
 // const stellarUtils = require("../../../utils/stellar/utils");
 
-const {eventParser, get_events_data_by} = require("./utils/tx_event_parser");
+const {eventParser, get_wmb_gate_events_data} = require("./utils/tx_event_parser");
 
 let g_stellar_client = null;
 
@@ -82,7 +82,7 @@ class StellarChain extends abstract_base_chain {
           // console.log("...tx Events num: ", txEvents.length);
 
           //const txEvents = eventParser(tx.result_meta_xdr);
-          const resultEvents = get_events_data_by(txEvents, scAddress, ["OutboundTaskExecuted", "InboundTaskExecuted"]);
+          const resultEvents = get_wmb_gate_events_data(txEvents, scAddress, ["OutboundTaskExecuted", "InboundTaskExecuted"]);
           resultEvents.forEach(function (event) {
             event.blockNumber = blockNum;
             if(!txSeconds) {

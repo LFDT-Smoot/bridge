@@ -19,7 +19,7 @@ const TimeoutPromise = require('../utils/timeoutPromise')
 
 const HorizonClient = require("../utils/stellar/client_horizon");
 
-const {eventParser, get_events_data_by} = require("../utils/stellar/tx_event_parser");
+const {eventParser, get_wmb_gate_events_data} = require("../utils/stellar/tx_event_parser");
 
 // Get value from event's data node:
 const getValue = (valueObj) =>  Object.values(valueObj)[0];

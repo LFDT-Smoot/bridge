@@ -1,6 +1,6 @@
 const HorizonClient = require('./client_horizon');
 
-const {get_events_data_by, eventParser} = require("./tx_event_parser_v2");
+const {get_wmb_gate_events_data, eventParser} = require("./tx_event_parser_v2");
 
 const client = new HorizonClient();
 
