@@ -1,10 +1,12 @@
 # Copyright (c) 2019 Wanchain. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-FROM node:16
+FROM node:20
 
 COPY ./node_app/ /agent/node_app/
 COPY ./config/ /agent/config/
+
+RUN npm install -g npm@11.4.2
 
 RUN cd /agent/node_app/ && \
     npm install --omit=dev
