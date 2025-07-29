@@ -1,6 +1,6 @@
 
 const config = {
-  "mongoUrl": "mongodb://localhost:27017/stellar_eea_scanService",
+  "mongoUrl": "mongodb://172.17.0.1:27017/stellar_eea_scanService",
   "webPort": 9001,
   "XLM":{
     "horizonUrl": "https://horizon-testnet.stellar.org/",
