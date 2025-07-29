@@ -3,8 +3,8 @@
 
 FROM node:20
 
-COPY ./node_app/ /agent/node_app/
-COPY ./config/ /agent/config/
+COPY node_app /agent/node_app/
+COPY config /agent/config/
 
 RUN npm install -g npm@11.4.2
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 deployFolder="$(pwd)/../"
-jsCodeFolder="${deployFolder}/../agent/"
+jsCodeFolder="${deployFolder}/../../agent/"
 
 cd ${deployFolder}
 
