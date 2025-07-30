@@ -1,5 +1,5 @@
 const {
-  SorobanRpc,
+  rpc : SorobanRpc,
   scValToNative
 } = require('@stellar/stellar-sdk');
 

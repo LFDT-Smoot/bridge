@@ -1,4 +1,4 @@
-const {Contract, SorobanRpc, TransactionBuilder, BASE_FEE, Networks, nativeToScVal} = require("@stellar/stellar-sdk");
+const {Contract, rpc : SorobanRpc, TransactionBuilder, BASE_FEE, Networks, nativeToScVal} = require("@stellar/stellar-sdk");
 
 /**
  *
