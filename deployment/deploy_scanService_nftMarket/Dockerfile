@@ -26,4 +26,5 @@ EXPOSE 9001
 
 WORKDIR /app
 
-CMD nohup sh -c 'pm2-runtime start app_pm2.json'
+CMD ["node", "/app/node_app/src/startScanChainService.js", "--dbip", "172.17.0.1", "--dbport", "27017"]
+

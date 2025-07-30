@@ -85,19 +85,11 @@ remove_container() {
 # fi
 # remove_container "my_container_2"
 
-CRTDIR=$(pwd)
-pm2ScriptPath="$(pwd)/../config"
-echo "${appPm2Json}"
-echo $appPm2Json > $pm2ScriptPath/app_pm2.json
-
 remove_container $container
 
-appCodePath="$(pwd)/../node_app"
-echo "(mount) code source path: ${appCodePath}"
 
 sudo docker run --log-opt max-size=10m --log-opt max-file=50 \
 -p 9001:9001 \
 --name $container \
--v $pm2ScriptPath/app_pm2.json:/app/app_pm2.json \
 -d --restart=always $image
 
