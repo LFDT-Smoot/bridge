@@ -1,12 +1,12 @@
 
 const config = {
-  "mongoUrl": "mongodb://localhost:27017/stellar_eea_scanService",
+  "mongoUrl": "mongodb://172.17.0.1:27017/stellar_eea_scanService",
   "webPort": 9001,
   "XLM":{
     "horizonUrl": "https://horizon-testnet.stellar.org/",
     "__horizonUrl": "http://34.214.40.196:8000/",
     "scanIntervalMs": 5000,
-    "beginScanBlockNumber": 93000,
+    "beginScanBlockNumber": 597600,
     "safeBlock" : 1,
     "nftMarketAddr": "CD4JGLM2CLVI6B6LQ4ZWY2XSPGC6SU5PJHVXAHUTL2MRH4GTE2JXU36O",
     "nftContractAddr": "CB6SZVUAFKBOSWNRD3SQ4S42DT7UN5OJ3WIAXPELZ7TNNQL444EOVKIJ",
@@ -14,7 +14,7 @@ const config = {
   "MATIC":{
     "nodeUrl": "https://rpc-amoy.polygon.technology",
     "scanIntervalMs": 2000,
-    "beginScanBlockNumber": 23238880,
+    "beginScanBlockNumber": 24255300,
     "safeBlock" : 1,
     "nftMarketAddr": "0xB9b35117b4d0124C893f9505F5a3C9e69144a3e2",
     "nftMarketAbi": require('./abi/abi.NftMarket.json'),

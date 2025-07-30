@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2019 Wanchain. All Rights Reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 'use strict';
 
@@ -14,7 +19,34 @@ const TimeoutPromise = require('../utils/timeoutPromise')
 
 const HorizonClient = require("../utils/stellar/client_horizon");
 
-const {eventParser, get_events_data_by} = require("../utils/stellar/tx_event_parser");
+const {eventParser, get_wmb_gate_events_data} = require("../utils/stellar/tx_event_parser");
+
+// Get value from event's data node:
+const getValue = (valueObj) =>  Object.values(valueObj)[0];
+
+function isArray(value) {
+  return Array.isArray(value);
+}
+
+function isPlainObject(value) {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  let proto = Object.getPrototypeOf(value);
+  if (proto === null) {
+    // Objects created with Object.create(null) have no prototype
+    return true;
+  }
+  let Ctor = proto.constructor;
+  return typeof Ctor === 'function' && Ctor === Object;
+}
+
+function hexAdd0x(hexs) {
+  if (0 != hexs.indexOf('0x')) {
+    return '0x' + hexs;
+  }
+  return hexs;
+}
 
 module.exports = class ScanStellarService extends ScanChainBase {
   constructor(){
@@ -41,11 +73,11 @@ module.exports = class ScanStellarService extends ScanChainBase {
       if(!txMeta) {
         // to get tx meta data
         const txInfo = await this.client.getTransactionDetails(tx.hash);
-        console.log("\n\n...txInfo: ", txInfo);
+        // console.log("\n\n...txInfo: ", txInfo);
         txMeta = txInfo.resultMetaXdr;
       }
-      console.log("\n\n...tx resultMetaXdr: ", txMeta);
-      console.log("\n\n...tx result_meta_xdr: ", tx.result_meta_xdr);
+      console.log("\n...tx resultMetaXdr is empty?: ", !!!txMeta);
+      console.log("\n...tx result_meta_xdr is empty?: ", !!!tx.result_meta_xdr);
 
       if(!txMeta){
         continue;
@@ -61,13 +93,14 @@ module.exports = class ScanStellarService extends ScanChainBase {
             await this.process_nftMarket_event(event, tx.source_account, tx.id, msTime, blockNumber);
           }
           else if(event.contractId === this.config.nftContractAddr) {
-            if("mint" === event.topics.nodes[0].nodes[0].value) {
+            const firstTopic = getValue(event.topics[0]);
+            if("mint" === firstTopic) {
               await this.process_nft_mint_event(event);
             }
-            else if("burn" === event.topics.nodes[0].nodes[0].value) {
+            else if("burn" === firstTopic) {
               await this.process_nft_burn_event(event);
             }
-            else if("transfer" === event.topics.nodes[0].nodes[0].value) {
+            else if("transfer" === firstTopic) {
               await this.process_nft_transfer_event(event);
             }
           }
@@ -77,14 +110,10 @@ module.exports = class ScanStellarService extends ScanChainBase {
   }
 
   async process_nft_mint_event(event) {
-    if(event.data.type !== "data" || event.data.value !== "[scvVec]") {
-      return;
-    }
 
-    const dataVec = event.data.nodes[0];
-    //let adminAddr = dataVec.nodes[0].nodes[0].value;
-    let toAddr = dataVec.nodes[1].nodes[0].value;
-    let nftId = dataVec.nodes[2].nodes[0].value;
+    const [ _adminAddrObj, toAddrObj, nftIdObj] = event.data;
+    let toAddr = getValue(toAddrObj);
+    let nftId = getValue(nftIdObj);
     
     let whereJson = {
       nftId: nftId
@@ -105,11 +134,10 @@ module.exports = class ScanStellarService extends ScanChainBase {
   }
 
   async process_nft_burn_event(event) {
-    const dataVec = event.data.nodes[0];
-    let nftId = dataVec.nodes[1].nodes[0].value;
-    if(event.data.type !== "data" || event.data.value !== "[scvVec]") {
-      return;
-    }
+
+    const [ _, nftIdObj] = event.data;
+
+    let nftId = getValue(nftIdObj);
 
     let whereJson = {
       nftId: nftId
@@ -122,14 +150,18 @@ module.exports = class ScanStellarService extends ScanChainBase {
   }
 
   async process_nft_transfer_event(event) {
-    const dataVec = event.data.nodes[0];
-    //let fromAddr = dataVec.nodes[0].nodes[0].value;
-    let toAddr = dataVec.nodes[1].nodes[0].value;
-    let nftId = dataVec.nodes[2].nodes[0].value;
+    const [ _eventNameObj, _fromAddrObj, toAddrObj] = event.topics;
 
-    if(event.data.type !== "data" || event.data.value !== "[scvVec]") {
+    if(getValue(_eventNameObj) !== "transfer") {
       return;
     }
+    const nftIdObj = event.data;
+    if(!isPlainObject(nftIdObj)) {
+      console.log("process_nft_transfer_event(), invalid data: ", event.data);
+      return;
+    }
+    let toAddr = getValue(toAddrObj);
+    let nftId = getValue(nftIdObj);
 
     let whereJson = {
       nftId: nftId
@@ -148,34 +180,26 @@ module.exports = class ScanStellarService extends ScanChainBase {
   }
 
   async process_nftMarket_event(event, fromAddr, txId, txDate, blockNumber) {
-    let e = event;
     let expected_topics = ["CreateOrder","CancelOrder", "OrderSuccess", "CancelSuccess"];
-    const actualTopics = e.topics.nodes;
+    const actualTopics = event.topics;
     let bTopicMatched = false;
     for(let i = 0; i < actualTopics.length; i++) {
-      if(expected_topics.includes(actualTopics[i].nodes[0].value)) {
+      let oneActualTopic = Object.values(actualTopics[i])[0]; // TODO: maybe need to check second/third/... topic
+      if(expected_topics.includes(oneActualTopic)) {
         bTopicMatched = true;
         break;
       }
     }
 
     if(bTopicMatched) {
-      if(e.data.type !== "data" || e.data.value !== "[scvVec]") {
-        return
-      }
 
-      const dataVec = e.data.nodes[0];
-      const orderKeyNode = dataVec.nodes[0];
-      const messageDataNode = dataVec.nodes[1];
+      const [orderKeyObj, messageDataNode] = event.data;
 
-      const orderKeyHexArrayStr = orderKeyNode.nodes[0].value;
-      const messageDataJsonStr = messageDataNode.nodes[0].value;
-      const orderKey = Buffer.from(JSON.parse(orderKeyHexArrayStr)).toString("hex");
-      const messageData = JSON.parse(messageDataJsonStr);
+      const orderKeyStr = getValue(orderKeyObj);
 
-      messageData.recipient = "0x" + Buffer.from(messageData.recipient.data).toString().toLowerCase();
-      messageData.priceToken = "0x" + Buffer.from(messageData.priceToken.data).toString().toLowerCase();
-      messageData.orderKey = orderKey;
+      let messageData = this._parseMessageDataNode(messageDataNode["map"]);
+      messageData.orderKey = orderKeyStr;
+      messageData = this._messageDataFormatConvert(messageData);
 
       if(messageData.messageType === "CreateOrder") {
         await this.processCreateOrder(messageData, fromAddr, txId, txDate, blockNumber);
@@ -189,6 +213,27 @@ module.exports = class ScanStellarService extends ScanChainBase {
       else if(messageData.messageType === "CancelSuccess") {
         await this.processCancelSuccess(messageData, txId, txDate, blockNumber);
       }
+    }
+  }
+
+  _parseMessageDataNode(paramArray){
+    let messageData = {};
+    paramArray.map((item) => {
+      messageData[getValue(item.key)] = getValue(item.val)
+    });
+    return messageData;
+  }
+
+  _messageDataFormatConvert(event) {
+    return {
+      buyer : event.buyer,
+      messageType: event.message_type,
+      nftContract: event.nft_contract,
+      nftId: event.nft_id,
+      price: event.price,
+      priceToken: hexAdd0x(event.price_token),
+      recipient: hexAdd0x(event.recipient),
+      orderKey: event.orderKey,
     }
   }
 

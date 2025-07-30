@@ -4,10 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 const {
-  SorobanRpc,
+  rpc : SorobanRpc,
   scValToNative
 } = require('@stellar/stellar-sdk');
-
 
 let g_client = null;
 

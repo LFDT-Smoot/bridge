@@ -1,15 +1,16 @@
 # Copyright (c) 2019 Wanchain. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-FROM node:16
+FROM node:20
 
-COPY ./node_app/ /agent/node_app/
-COPY ./config/ /agent/config/
+COPY node_app /app/node_app/
 
-RUN cd /agent/node_app/ && \
+RUN npm install -g npm@latest
+
+RUN cd /app/node_app/ && \
     npm install --omit=dev
 
-WORKDIR /agent
+WORKDIR /app
 
 RUN npm install -g pm2
 RUN pm2 install pm2-logrotate
@@ -21,8 +22,9 @@ RUN pm2 set pm2-logrotate:max_size 200M \
 RUN apt-get update
 RUN apt-get install vim -y
 
-EXPOSE 1000
+EXPOSE 9001
 
-WORKDIR /agent
+WORKDIR /app
 
-CMD nohup sh -c 'pm2-runtime start agent_pm2.json'
+CMD ["node", "/app/node_app/src/startScanChainService.js", "--dbip", "172.17.0.1", "--dbport", "27017"]
+

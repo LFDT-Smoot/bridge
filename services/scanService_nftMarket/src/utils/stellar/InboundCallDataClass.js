@@ -1,7 +1,7 @@
 const {
     Keypair,
     Contract,
-    SorobanRpc,
+    rpc : SorobanRpc,
     TransactionBuilder,
     Networks,
     BASE_FEE,

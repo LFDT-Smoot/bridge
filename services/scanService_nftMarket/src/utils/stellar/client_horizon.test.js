@@ -1,5 +1,6 @@
 const HorizonClient = require('./client_horizon');
-const decoder = require("./decoder");
+
+const {get_wmb_gate_events_data, eventParser} = require("./tx_event_parser");
 
 const client = new HorizonClient();
 
@@ -18,7 +19,7 @@ async function main() {
 
     const txInfo = await client.getTransactionDetails("16627b30bfee7d3895cf24cfceab72482f4f4bbb7a2a1d614998f8e08f7035ac");  // just look for Tx of NFT-Market contract
 
-    const events = decoder.decodeFromXDR(txInfo.resultMetaXdr, "TransactionMeta")
+    const events = await eventParser(txInfo.resultMetaXdr)
     console.log(events);
 }
 

@@ -56,4 +56,18 @@ let start = new Start();
 start.start();
 console.log("running...");
 
+function exceptionHandler(error) {
+  // Will print "uncaughtException err is not defined"
+  console.error('main file uncaughtException', error.message || error);
+}
+
+function rejectionHandler(error) {
+  // Will print "unhandledRejection err is not defined"
+  console.error('unhandledRejection', error.message || error);
+}
+
+process.on('uncaughtException', exceptionHandler);
+process.on('unhandledRejection', rejectionHandler);
+
+
 module.exports = start;
