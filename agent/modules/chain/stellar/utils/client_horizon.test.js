@@ -24,7 +24,7 @@ async function main() {
     // await client.getAllAssets();
 
     const txInfo = await client.getTransactionDetails("89d8aba22d40583f5f240bdcb28ba0b3dc9fe0f4befcb007bb5875ddcb1acf91");  // just look for Tx of NFT-Market contract
-    const events = eventParser(txInfo.resultMetaXdr)
+    const events = await eventParser(txInfo.resultMetaXdr)
     console.log("events: ", events);
 }
 

@@ -78,7 +78,7 @@ class StellarChain extends abstract_base_chain {
             continue;
           }
 
-          const txEvents = eventParser(txMeta);//tx.result_meta_xdr
+          const txEvents = await eventParser(txMeta);//tx.result_meta_xdr
           // console.log("...tx Events num: ", txEvents.length);
 
           //const txEvents = eventParser(tx.result_meta_xdr);
