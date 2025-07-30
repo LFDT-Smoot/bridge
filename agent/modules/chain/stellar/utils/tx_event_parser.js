@@ -29,6 +29,10 @@ function isPlainObject(value) {
 
 async function get_all_events(result_meta_xdr_base64) {
 
+  if(!result_meta_xdr_base64) {
+    return [];
+  }
+
   await StellarXdr.initialize();
 
   const xdrJsonStr = StellarXdr.decode("TransactionMeta", result_meta_xdr_base64);
