@@ -82,9 +82,8 @@ const checkTrustAddress = async ()=> {
 const main = async () => {
     //await getStellarScAddr();
     //await updateStellarContractAddress();
+    await updateTrustAddress();
     await checkTrustAddress();
-   // await updateTrustAddress();
-    
 }
 
 main();
