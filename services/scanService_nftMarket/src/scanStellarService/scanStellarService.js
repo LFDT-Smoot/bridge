@@ -42,7 +42,7 @@ function isPlainObject(value) {
 }
 
 function hexAdd0x(hexs) {
-  if (0 != hexs.indexOf('0x')) {
+  if (hexs && 0 != hexs.indexOf('0x')) {
     return '0x' + hexs;
   }
   return hexs;
@@ -63,7 +63,7 @@ module.exports = class ScanStellarService extends ScanChainBase {
   }
 
   async scanChain(blockNumber) {
-    //console.log("scanChain chainType:", this.chainType, "blockNumber:", blockNumber);
+    console.log("scanChain chainType:", this.chainType, "blockNumber:", blockNumber);
     const txs = await this.client.getTxsInLedger(blockNumber);
     for(let idx = 0; idx < txs.length; ++idx) {
       let tx = txs[idx];
@@ -76,14 +76,14 @@ module.exports = class ScanStellarService extends ScanChainBase {
         // console.log("\n\n...txInfo: ", txInfo);
         txMeta = txInfo.resultMetaXdr;
       }
-      console.log("\n...tx resultMetaXdr is empty?: ", !!!txMeta);
-      console.log("\n...tx result_meta_xdr is empty?: ", !!!tx.result_meta_xdr);
 
       if(!txMeta){
+        console.log("\n...tx resultMetaXdr is empty?: ", !!!txMeta);
+        console.log("\n...tx result_meta_xdr is empty?: ", !!!tx.result_meta_xdr);
         continue;
       }
 
-      const txEvents = eventParser(txMeta);
+      const txEvents = await eventParser(txMeta);
       if(txEvents) {
         for(let idx_event = 0; idx_event < txEvents.length; ++idx_event) {
           let event = txEvents[idx_event];
@@ -198,8 +198,8 @@ module.exports = class ScanStellarService extends ScanChainBase {
       const orderKeyStr = getValue(orderKeyObj);
 
       let messageData = this._parseMessageDataNode(messageDataNode["map"]);
-      messageData.orderKey = orderKeyStr;
       messageData = this._messageDataFormatConvert(messageData);
+      messageData.orderKey = orderKeyStr;
 
       if(messageData.messageType === "CreateOrder") {
         await this.processCreateOrder(messageData, fromAddr, txId, txDate, blockNumber);
@@ -227,13 +227,12 @@ module.exports = class ScanStellarService extends ScanChainBase {
   _messageDataFormatConvert(event) {
     return {
       buyer : event.buyer,
-      messageType: event.message_type,
-      nftContract: event.nft_contract,
-      nftId: event.nft_id,
+      messageType: event.messageType ? event.messageType : event.message_type, //check order: XDR-V4, XDR-V3
+      nftContract: event.nftContract ? event.nftContract : event.nft_contract, //v4 is camelCase, v3 is snake_case
+      nftId: event.nftId ? event.nftId : event.nft_id,
       price: event.price,
-      priceToken: hexAdd0x(event.price_token),
+      priceToken: hexAdd0x(event.priceToken ? event.priceToken : event.price_token),
       recipient: hexAdd0x(event.recipient),
-      orderKey: event.orderKey,
     }
   }
 
