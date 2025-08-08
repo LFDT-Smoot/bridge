@@ -599,7 +599,7 @@ module.exports = class StellarAgent extends abstract_base_agent{
       return [hashX, content];
     } catch (err) {
       this.logger.error("some wrong happened during getDecodeEventDbData", this.chainType, decodeEvent, err);
-      return null;
+      throw err;
     }
   }
 

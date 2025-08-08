@@ -27,6 +27,22 @@ function isPlainObject(value) {
   return typeof Ctor === 'function' && Ctor === Object;
 }
 
+/**
+ *
+ * @param hex:
+ * @returns {string}
+ *
+ * example: hexToAscii("724471615638616f57505371504764793669584c597a716541314445474d43727a4a3a4d6f6f")
+ * got:  'rDqaV8aoWPSqPGdy6iXLYzqeA1DEGMCrzJ:Moo'
+ */
+function hexToAscii(hex) {
+  var hex = hex.toString();//force conversion
+  var str = '';
+  for (var i = 0; i < hex.length; i += 2)
+    str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+  return str;
+}
+
 async function get_all_events(result_meta_xdr_base64) {
 
   if(!result_meta_xdr_base64) {
@@ -103,14 +119,17 @@ function get_wmb_gate_events_data(events, expected_contractId, expected_topics) 
 
       // const taskId = Buffer.from(JSON.parse(taskIdHexArrayStr)).toString("hex");
       // const networkId = networkIdBigNum;
-      // const contractAddress = Buffer.from(JSON.parse(contractAddressHexArrayStr)).toString("hex");
+
+      // FIXME: this only fix for xdr-v4. for xdr-v3 should not call this.
+      //  But, IMO, we can just go with this, because we actually pass the age to scan xdr-v3 format transaction.
+      const contractAddress = hexToAscii(contractAddressHexArrayStr);
 
       result.push({
         event: matchedEventName, // event name, such as 'OutboundTaskExecuted', 'CrosschainFunctionCall'
         args:{
           "taskId" : taskIdHexArrayStr,
           "networkId": networkIdBigNum,  // of peer chain
-          "contractAddress": contractAddressHexArrayStr, // on peer chain
+          "contractAddress": contractAddress, // on peer chain
           "functionCallData": finalFuncCallDataHexArrayStr,
         },
       })

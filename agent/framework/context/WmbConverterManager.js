@@ -65,7 +65,7 @@ class WmbConverterManager {
     }
 
     if(!dAppName) {
-      throw new Error(`Could not find for ${chainName} sc address: ${scAddress}`);
+      throw new Error(`Could not find converter for ${chainName} sc address: ${scAddress}`);
     }
 
     return this.getWmbAppConverter(chainName, dAppName);
@@ -122,8 +122,7 @@ class WmbConverterManager {
 module.exports = WmbConverterManager;
 
 
-const bRUnTest = true;
-if(bRUnTest) {
+if (require.main === module) {
   const dict = new WmbConverterManager();
 
   console.log("--- Testing WmbAppConverter (chainName, dAppName) ---");
