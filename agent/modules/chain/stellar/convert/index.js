@@ -36,8 +36,13 @@ module.exports = class WmbGateConverter extends AbstractConvert {
   decodeFinalFunctionCallData(finalFuncCallDataXdrBytes) {
     let finalFuncCallData = finalFuncCallDataXdrBytes;
     if(typeof finalFuncCallDataXdrBytes === "string") {
-      finalFuncCallData = JSON.parse(finalFuncCallDataXdrBytes);
+      finalFuncCallData = Buffer.from(finalFuncCallDataXdrBytes, 'hex');
     }
+
+    if (!Buffer.isBuffer(finalFuncCallData)) {
+      throw new TypeError('Argument "finalFuncCallDataXdrBytes" must be a Buffer instance.');
+    }
+
     let finalFuncCallDataScVal = xdr.ScVal.fromXDR(finalFuncCallData);
     let finalFuncCallDataObj = scValToNative(finalFuncCallDataScVal);
     return finalFuncCallDataObj;
