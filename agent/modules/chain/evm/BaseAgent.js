@@ -575,7 +575,7 @@ module.exports = class BaseAgent extends abstract_base_agent {
 
   async getDataForRelayProof() {
     const srcEvent = this.record.srcTransferEvent[0];
-    const finalFunctionCallDataBytes = this.encodeFinalFunctionCallData(this.chainType, srcEvent.args.contractAddress, JSON.parse(this.record.extData))
+    const finalFunctionCallDataBytes = this.encodeFinalFunctionCallData(this.chainType, srcEvent.args.contractAddress, srcEvent.functionCallData)
     const encodedInfo = this.convertEncodeInfo(this.hashX, this.chainID, this.crossAddress, finalFunctionCallDataBytes);
     let signData = ethUtil.keccak256(encodedInfo);
     this.logger.info("********************************** prepareSignData Via MultiSig ********************************** hashX", this.hashX, signData, encodedInfo);
@@ -735,7 +735,8 @@ module.exports = class BaseAgent extends abstract_base_agent {
         'hashKey-', this.hashX, 'crossMode-', this.record.crossMode, 'crossAddress-', crossAddress);
 
       const proofData = await this.getDataForRelayProof();
-      return (proofData.signData.toLowerCase() === signData.toLowerCase());
+      let signDataHash = proofData.signData.toString("hex").toLowerCase();
+      return (signDataHash === id.dataHash);
     } catch (err) {
       return await Promise.reject(err);
     }
