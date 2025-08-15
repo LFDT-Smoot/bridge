@@ -130,8 +130,13 @@ module.exports = class multiSig extends RelayAbstract {
     }, multiSignPromiseTimeout, "multiSig getForApprove Timeout");
   }
 
-  approve(id, signData, extData) {
+  async approve(id, signData, extData) {
     const chainType = extData.chainType;
+
+    const toByteArray = hexString =>
+      new Uint8Array(hexString.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+
+    let signDataByteArray = toByteArray(signData);
 
     let signObj = {
       uniqueId: id,
@@ -139,7 +144,7 @@ module.exports = class multiSig extends RelayAbstract {
       pk: this.workerWallet.publicKey(),
       rawData: extData.encodedInfo,
       minSignCount: global.config.crossTokens[chainType].CONF.multiSigThreshold,
-      signature: this.workerWallet.sign(signData).signature
+      signature: await this.workerWallet.sign(signDataByteArray).signature
     }
 
     this.logger.info("approve hashX:", id, " this.signData:", JSON.stringify(signObj, null, 4));

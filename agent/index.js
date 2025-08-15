@@ -201,8 +201,8 @@ async function syncRelayRequest(logger, chainType) {
 
           let checkResult = await crossAgent.checkRelayData(approveData);
           if (checkResult) {
-            const extData = {chainType: this.chainType, encodedInfo: approveData.rawData };
-            const multiSignatureResult = await multiSig.approve(this.hashX, approveData.dataHash, extData);
+            const extData = {chainType: transOnChain, encodedInfo: approveData.rawData };
+            const multiSignatureResult = await multiSig.approve(approveData.uniqueId, approveData.dataHash, extData);
 
             logger.info("********************************** syncRelayRequest get one valid data ********************************** for hashX :", recordInDb, transOnChain, JSON.stringify(approveData, null, 4), "multiSignatureResult: ", multiSignatureResult);
           } else {
