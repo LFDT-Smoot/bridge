@@ -144,7 +144,7 @@ module.exports = class multiSig extends RelayAbstract {
       pk: this.workerWallet.publicKey(),
       rawData: extData.encodedInfo,
       minSignCount: global.config.crossTokens[chainType].CONF.multiSigThreshold,
-      signature: await this.workerWallet.sign(signDataByteArray).signature
+      signature: (await this.workerWallet.sign(signDataByteArray)).signature
     }
 
     this.logger.info("approve hashX:", id, " this.signData:", JSON.stringify(signObj, null, 4));
