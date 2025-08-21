@@ -1,0 +1,21 @@
+---
+global:
+  scrape_interval:     10s
+  evaluation_interval: 20s
+
+scrape_configs:
+- job_name: gateway_1
+  static_configs:
+  - targets: ['host.docker.internal:9780', '0.0.0.0:9780']
+    labels:
+      app: gateway
+- job_name: gateway_2
+  static_configs:
+    - targets: ['host.docker.internal:9580', '0.0.0.0:9580']
+      labels:
+        app: gateway
+- job_name: abi_updater
+  static_configs:
+    - targets: ['host.docker.internal:9380', '0.0.0.0:9380']
+      labels:
+        app: abi_updater
