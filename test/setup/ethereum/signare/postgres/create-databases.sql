@@ -1,0 +1,7 @@
+DROP DATABASE IF EXISTS db_signare;
+CREATE DATABASE db_signare
+WITH OWNER = postgres
+     ENCODING = 'UTF8'
+     TABLESPACE = pg_default
+     CONNECTION LIMIT = -1;
+ALTER DATABASE db_signare WITH CONNECTION LIMIT = -1;

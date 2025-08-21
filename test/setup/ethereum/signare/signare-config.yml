@@ -1,0 +1,26 @@
+logger:
+  logLevel: 'debug'
+database:
+  postgresql:
+    host: 'postgres'
+    port: 5432
+    scheme: 'postgres'
+    database: 'db_signare'
+    username: 'postgres'
+    password: 'postgres'
+    sslmode: 'disable'
+requestContext:
+  userRequestHeader: 'X-Auth-RpcUserId'
+  applicationRequestHeader: 'X-Auth-RpcApplicationId'
+metrics:
+  prometheus:
+    port: 9092
+    path: /metrics
+    maxRequestInFlight: 10
+    timeoutInMillis: 30000
+    namespace: 'signer'
+hsmmodules:
+  softhsm:
+    lib: '/usr/local/lib/softhsm/libsofthsm2.so'
+  akv:
+    url: 'https://signare.vault.azure.net/'
