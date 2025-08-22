@@ -66,25 +66,51 @@ class HorizonClient {
     }
 
     async execRequest(config, hintMsg = ""){
-        let reqPromise = axios(config);
-        if(g_wait_for_ratelimie_reset) {
-            throw new Error("In rate limit state, please try later!")
+        try{
+            g_req_counters++;
+
+            if(g_wait_for_ratelimie_reset) {
+                throw new Error("In rate limit state, please try later!")
+            }
+
+            let reqPromise = axios(config);
+            const configuredTimeout = global.moduleConfig ? global.moduleConfig.promiseTimeout : undefined;
+            const reqPromiseWithTimeout = new TimeoutPromise(reqPromise,  configuredTimeout || 30*1000, "PTIMEOUT: " + hintMsg);
+            const resp = await reqPromiseWithTimeout;
+            return resp;
+        }catch (e) {
+            // this.logger.info("horizon client catch error:", e);
+            let errMsg = {
+                "requestContext": hintMsg,
+            };
+            if(typeof e === 'string') {
+                errMsg["error"] = e;
+            }else{
+                errMsg["errorCode"] = e.code;
+                errMsg["status"] = e.status;
+            }
+
+            if(e.status == 429 || (e.response && e.response.statusText == 'Too Many Requests') ) {
+                this.logger.info("================>>>>>>>>>>>>>   horizon client catch 429 error! ================>>>>>>>>>>>>>  ");
+                errMsg["data"] = e.response.data;
+
+                this.logger.error(" RATE LIMIT happen! Horizon url: " + config.url,  "Sum up send request times: ", g_req_counters);
+                g_wait_for_ratelimie_reset = true;
+
+                const seconds_to_wait_default = 5*60;
+                let seconds_to_wait = seconds_to_wait_default;
+                try{
+                    seconds_to_wait = e.response.headers['x-ratelimit-reset'];
+                    this.logger.info("Request horizon  seconds_to_wait: ", seconds_to_wait);
+                }catch (e) {
+                    seconds_to_wait = seconds_to_wait_default;
+                    this.logger.info("Request horizon  seconds_to_wait default: ", seconds_to_wait_default);
+                }
+                setTimeout(()=> {g_wait_for_ratelimie_reset = false}, seconds_to_wait * 1000);
+            }
+            throw new Error(JSON.stringify(errMsg, null, 2));
         }
 
-        this.logger.info("Request horizon url: " + config.url, " g_req_counters: ", g_req_counters);
-        g_req_counters++;
-        const configuredTimeout = global.moduleConfig ? global.moduleConfig.promiseTimeout : undefined;
-        const reqPromiseWithTimeout = new TimeoutPromise(reqPromise,  configuredTimeout || 30*1000, "PTIMEOUT: " + hintMsg);
-        const resp = await reqPromiseWithTimeout;
-        // console.log("resp: ", resp);
-        if(resp.status == 429 || resp.statusText == 'Too Many Requests') {
-            this.logger.error(" RATE LIMIT happen! This as send request times: ", g_req_counters);
-            g_wait_for_ratelimie_reset = true;
-
-            const seconds_to_wait = resp.headers['x-ratelimit-reset'];
-            setTimeout(()=> {g_wait_for_ratelimie_reset = false}, seconds_to_wait * 1000);
-        }
-        return resp;
     }
 
     async getLastLedgerSequence(){
