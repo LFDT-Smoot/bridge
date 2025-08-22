@@ -14,13 +14,13 @@ function hexStrip0x(hexStr) {
 
 class WmbConverterManager {
 
-  constructor(associatedScAddressDict) {
+  constructor(wmbAppLookupTable) {
     // For converters keyed by [chainName, dAppName]
     this.appConverterMap = {};
     // For converters keyed only by [chainName]
     this.gateConverterMap = {};
 
-    this.associatedScAddressDict = associatedScAddressDict;
+    this.wmbAppLookupTable = wmbAppLookupTable;
   }
 
   // --- WmbAppConverter APIs (keyed by chainName and dAppName) ---
@@ -45,21 +45,13 @@ class WmbConverterManager {
   getWmbAppConverterByScAddress(chainName, scAddress) {
     let dAppName = "";
 
-    const dAppAddressMap = this.associatedScAddressDict[chainName];
-    if (dAppAddressMap) {
-      for (const [name, scAddressArray] of Object.entries(dAppAddressMap)) {
-
-        for (let i = 0; i < scAddressArray.length; i++) {
-          const left = hexStrip0x(scAddressArray[i]).toLowerCase();
-          const right = hexStrip0x(scAddress).toLowerCase();
-          if (left === right) {
-            dAppName = name;
-            break; // Exit the loop once a match is found
-          }
-        }
-
-        if (scAddressArray.includes(scAddress)) {
-          dAppName = name;
+    for (const [appName, addressList] of Object.entries(this.wmbAppLookupTable)) {
+      for (let i = 0; i < addressList.length; i++) {
+        const right = hexStrip0x(scAddress).toLowerCase();
+        const left = hexStrip0x(addressList[i]).toLowerCase();
+        if (left === right) {
+          dAppName = appName;
+          break; // Exit the loop once a match is found
         }
       }
     }

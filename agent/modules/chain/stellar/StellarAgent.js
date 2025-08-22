@@ -649,14 +649,14 @@ module.exports = class StellarAgent extends abstract_base_agent{
    * Convert functionCallData which is a js object to encoding hex-string.
    *
    * @param crossChainType   of the chain that this function's return value will be applied to.
-   * @param wmbAppScAddress The address of WmbApp busyness contract.
+   * @param wmbAppScAddress  No use anymore. TODO: Remove this params
    * @param functionCallData js object to be encoded
    * @returns {*}
    */
   encodeFinalFunctionCallData(crossChainType, wmbAppScAddress, functionCallData) {
 
     const gateConverter = global.wmbConverterMgr.getWmbGateConverter(crossChainType);
-    const wmbAppConverter = global.wmbConverterMgr.getWmbAppConverterByScAddress(crossChainType, wmbAppScAddress);
+    const wmbAppConverter = global.wmbConverterMgr.getWmbAppConverterByScAddress(crossChainType, functionCallData.contractAddress);
     if (!wmbAppConverter){
       throw new Error("Failed to decode final function. Because can not find matched converter.");
     }
@@ -670,19 +670,19 @@ module.exports = class StellarAgent extends abstract_base_agent{
    *  Decode hex-string format input into a js object.
    *
    * @param originChainType  of the chain that this 'finallyFunctionCallData' string came from.
-   * @param wmbAppScAddress The address of WmbApp busyness contract.
+   * @param wmbAppScAddress  No use anymore. TODO: Remove this params
    * @param finalFuncCallDataXdrBytes a hex-string format value.
    * @returns {*} return the JSON object
    */
   decodeFinalFunctionCallData(originChainType, wmbAppScAddress, finalFuncCallDataXdrBytes) {
 
     const gateConverter = global.wmbConverterMgr.getWmbGateConverter(originChainType);
-    const wmbAppConverter = global.wmbConverterMgr.getWmbAppConverterByScAddress(originChainType, wmbAppScAddress);
+    let finalFuncCallDataObj = gateConverter.decodeFinalFunctionCallData(finalFuncCallDataXdrBytes); // return: {chainId: xx, contractAddress:xx, functionCallData: xx}
+
+    const wmbAppConverter = global.wmbConverterMgr.getWmbAppConverterByScAddress(originChainType, finalFuncCallDataObj.contractAddress);
     if (!wmbAppConverter){
       throw new Error("Failed to decode final function. Because can not find matched converter.");
     }
-
-    let finalFuncCallDataObj = gateConverter.decodeFinalFunctionCallData(finalFuncCallDataXdrBytes); // return: {chainId: xx, contractAddress:xx, functionCallData: xx}
     let funcCallDataObj = wmbAppConverter.decodeFunctionCallData(finalFuncCallDataObj.functionCallData);
 
     return {

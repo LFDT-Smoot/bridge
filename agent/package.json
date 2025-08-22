@@ -13,15 +13,24 @@
     ]
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "^@root/(.*)$": "<rootDir>/$1",
+      "^@framework/(.*)$": "<rootDir>/framework/$1",
+      "^@modules/(.*)$": "<rootDir>/modules/$1"
+    }
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "_moduleAliases": {
-    "@root"      : ".",
-    "@framework"    : "framework/",
-    "@modules"      : "modules/"
+    "@root": ".",
+    "@framework": "framework/",
+    "@modules": "modules/"
   },
   "dependencies": {
     "@ethereumjs/tx": "^5.0.0",
@@ -42,5 +51,8 @@
     "web3": "1.10.4",
     "winston": "^3.3.3",
     "winston-daily-rotate-file": "^3.3.2"
+  },
+  "devDependencies": {
+    "jest": "^30.0.5"
   }
 }
