@@ -59,7 +59,7 @@ const checkTrustAddress = async ()=> {
     let words = process.env.words;
     let stellar_nft_market_sc = config.stellarScAddr.nft_market;
 
-    let wallet = ethers.Wallet.fromPhrase(words);
+    // let wallet = ethers.Wallet.fromPhrase(words);
 
     let nodeUrl = config.nodeUrl;
     let scAddr = config.scAddr.nftMarket;
