@@ -12,6 +12,16 @@ function hexStrip0x(hexStr) {
   return hexStr;
 }
 
+function asciiToHex(asciiString) {
+  let hexString = '';
+  for (let i = 0; i < asciiString.length; i++) {
+    const charCode = asciiString.charCodeAt(i);
+    const hexValue = charCode.toString(16).padStart(2, '0');
+    hexString += hexValue;
+  }
+  return hexString;
+}
+
 class WmbConverterManager {
 
   constructor(wmbAppLookupTable) {
@@ -52,6 +62,14 @@ class WmbConverterManager {
         if (left === right) {
           dAppName = appName;
           break; // Exit the loop once a match is found
+        }else { 
+          // Try compare the ascii2Hex result of 'left' value with the 'right' value.
+          // Because we may get hexed result of ascii address for evm and other chains.
+          const left = hexStrip0x(addressList[i]);
+          if(asciiToHex(left) === right) {
+            dAppName = appName;
+            break;
+          }
         }
       }
     }
