@@ -271,7 +271,7 @@ module.exports = class StellarAgent extends abstract_base_agent{
         this.logger.info("********************************** sendTransaction get signature ********************************** hashX", this.hashX, this.chainType, this.trans);
         let seed = await this.agentWorkerWallet.privateKey();
         rawTx = this.trans.sign(seed);
-        
+
         this.logger.info("********************************** sendTransaction get signature successfully ********************************** hashX", this.hashX, this.chainType, (rawTx instanceof Uint8Array) ? `Uint8Array(${rawTx.length})` : rawTx);
 
         this.__has_sendTrans_error__ = false;
@@ -615,7 +615,7 @@ module.exports = class StellarAgent extends abstract_base_agent{
         'hashKey-', this.hashX, 'crossMode-', this.record.crossMode, 'crossAddress-', crossAddress);
 
       const proofData = await this.getDataForRelayProof();
-      return (proofData.signData.toLowerCase() === signData.toLowerCase());
+      return (proofData.signData.toString("hex").toLowerCase() === id.dataHash);
     } catch (err) {
       return await Promise.reject(err);
     }
@@ -649,14 +649,14 @@ module.exports = class StellarAgent extends abstract_base_agent{
    * Convert functionCallData which is a js object to encoding hex-string.
    *
    * @param crossChainType   of the chain that this function's return value will be applied to.
-   * @param wmbAppScAddress  No use anymore. TODO: Remove this params
+   * @param wmbAppScAddress  The address of WmbApp busyness contract.
    * @param functionCallData js object to be encoded
    * @returns {*}
    */
   encodeFinalFunctionCallData(crossChainType, wmbAppScAddress, functionCallData) {
 
     const gateConverter = global.wmbConverterMgr.getWmbGateConverter(crossChainType);
-    const wmbAppConverter = global.wmbConverterMgr.getWmbAppConverterByScAddress(crossChainType, functionCallData.contractAddress);
+    const wmbAppConverter = global.wmbConverterMgr.getWmbAppConverterByScAddress(crossChainType, wmbAppScAddress);
     if (!wmbAppConverter){
       throw new Error("Failed to decode final function. Because can not find matched converter.");
     }
@@ -670,7 +670,7 @@ module.exports = class StellarAgent extends abstract_base_agent{
    *  Decode hex-string format input into a js object.
    *
    * @param originChainType  of the chain that this 'finallyFunctionCallData' string came from.
-   * @param wmbAppScAddress  No use anymore. TODO: Remove this params
+   * @param wmbAppScAddress  The address of WmbApp busyness contract.
    * @param finalFuncCallDataXdrBytes a hex-string format value.
    * @returns {*} return the JSON object
    */
@@ -679,7 +679,7 @@ module.exports = class StellarAgent extends abstract_base_agent{
     const gateConverter = global.wmbConverterMgr.getWmbGateConverter(originChainType);
     let finalFuncCallDataObj = gateConverter.decodeFinalFunctionCallData(finalFuncCallDataXdrBytes); // return: {chainId: xx, contractAddress:xx, functionCallData: xx}
 
-    const wmbAppConverter = global.wmbConverterMgr.getWmbAppConverterByScAddress(originChainType, finalFuncCallDataObj.contractAddress);
+    const wmbAppConverter = global.wmbConverterMgr.getWmbAppConverterByScAddress(originChainType, wmbAppScAddress);
     if (!wmbAppConverter){
       throw new Error("Failed to decode final function. Because can not find matched converter.");
     }
