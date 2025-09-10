@@ -1,0 +1,122 @@
+version: '3.5'
+networks:
+  test_setup_default:
+    name: test_setup_default
+services:
+  postgres:
+    networks:
+      - test_setup_default
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    container_name: signare_postgres
+    image: postgres:16.2
+    ports:
+      - "5432:5432"
+    command: postgres -c max_connections=1000 -c shared_buffers=3GB -c shared_preload_libraries=pg_stat_statements -c pg_stat_statements.track=all
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 2s
+      timeout: 5s
+      retries: 5
+  besu:
+    networks:
+      - test_setup_default
+    image: hyperledger/besu:25.7.0
+    container_name: besu
+    command:
+      - --config-file
+      - /etc/besu/besu.conf
+      - --genesis-file
+      - /etc/besu/genesis.json
+      - --data-path
+      - /var/lib/besu/data
+      - --rpc-http-host
+      - 0.0.0.0
+      - --rpc-ws-host
+      - 0.0.0.0
+      - --metrics-host
+      - 0.0.0.0
+      - --p2p-host
+      - 0.0.0.0
+    volumes:
+      - "./besu/config/besu.conf:/etc/besu/besu.conf"
+      - "./besu/nodes/node_1:/var/lib/besu/data"
+      - "./besu/genesis/node_1.json:/etc/besu/genesis.json"
+    ports:
+      - "8545:8545"
+      - "10545:9545"
+  signare-postgres-database-provisioner:
+    networks:
+      - test_setup_default
+    container_name: signare_postgres_database_provisioner
+    image: postgres:16.2
+    volumes:
+      - "./signare/postgres/create-databases.sql:/create-databases.sql"
+    environment:
+      - PGPASSWORD=postgres
+    command: psql -h postgres -p 5432 -U postgres -a -f /create-databases.sql
+    depends_on:
+      postgres:
+        condition: service_healthy
+  signare-postgres-database-migrator:
+    networks:
+      - test_setup_default
+    container_name: signare_postgres_database_migrator
+    image: signare:latest
+    command: upgrade --config /goethsigner
+    volumes:
+      - "./signare/signare-config.yml:/goethsigner/signare-config.yml"
+    depends_on:
+      signare-postgres-database-provisioner:
+        condition: service_completed_successfully
+  signare:
+    networks:
+      - test_setup_default
+    container_name: signare
+    environment:
+      - SOFTHSM2_CONF=/usr/local/etc/softhsm2.conf
+      - AZURE_CLIENT_ID
+      - AZURE_CLIENT_SECRET
+      - AZURE_TENANT_ID
+    image: signare:latest
+    command: --listen-address 0.0.0.0 --http-port 32325 --rpc-port 4545 --config /etc/goethsigner --signer-administrator owner
+    volumes:
+      - "./signare/signare-config.yml:/etc/goethsigner/signare-config.yml"
+      - "./signare/softhsm/softhsm2-util:/usr/local/bin/softhsm2-util"
+      - "./signare/softhsm/softhsm2.conf:/usr/local/etc/softhsm2.conf"
+      - "./signare/softhsm/tokens:/usr/local/var/lib/softhsm/tokens"
+    ports:
+      - "4545:4545"
+      - "32325:32325"
+      - "9092:9092"
+    depends_on:
+      signare-postgres-database-migrator:
+        condition: service_completed_successfully
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:v2.20.1
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yaml'
+    volumes:
+      - "./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml"
+    ports:
+      - "9090:9090"
+    networks:
+      - test_setup_default
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:7.3.6
+    depends_on:
+      - prometheus
+    environment:
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    volumes:
+      - "./grafana/provisioning:/etc/grafana/provisioning"
+    ports:
+      - "3000:3000"
+    networks:
+      - test_setup_default
