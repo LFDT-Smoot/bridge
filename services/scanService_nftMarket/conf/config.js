@@ -6,18 +6,21 @@ const config = {
     "horizonUrl": "https://horizon-testnet.stellar.org/",
     "__horizonUrl": "http://34.214.40.196:8000/",
     "scanIntervalMs": 5000,
-    "beginScanBlockNumber": 597600,
+    "beginScanBlockNumber": 714700,
     "safeBlock" : 1,
-    "nftMarketAddr": "CD4JGLM2CLVI6B6LQ4ZWY2XSPGC6SU5PJHVXAHUTL2MRH4GTE2JXU36O",
-    "nftContractAddr": "CB6SZVUAFKBOSWNRD3SQ4S42DT7UN5OJ3WIAXPELZ7TNNQL444EOVKIJ",
+    "nftMarketAddr": "CAXXHQQ2SFBI3UGVXO3Y3YAHG2VZIC6X6ZEVSVSB3RGFTKSYQHR2PXU6",
+    "nftContractAddr": "CBE3RST7FUEDGCZDZZRJNQCPP2C5S45GX2D4OFXEO4WXZN2WKOVIWHJA",
+    "gatewayAddr": "CCXQ766VQ66F4F2FVBLF4UWX34ALKWPNYYM6X4TENERUKMMO5BB3S6HD"
   },
   "MATIC":{
     "nodeUrl": "https://rpc-amoy.polygon.technology",
     "scanIntervalMs": 2000,
-    "beginScanBlockNumber": 24255300,
+    "beginScanBlockNumber": 26862000,
     "safeBlock" : 1,
-    "nftMarketAddr": "0xB9b35117b4d0124C893f9505F5a3C9e69144a3e2",
+    "nftMarketAddr": "0x7349B7e4baea99d499DEFC0B41f88500630e781A",
     "nftMarketAbi": require('./abi/abi.NftMarket.json'),
+    "gatewayAddr": "0xA51F41C8e1d6062222fcb711D5eDC7cB3c3395c4",
+    "gatewayAbi": require("./abi/abi.gateway.json")
   },
   "scanedInfoTbl": "scanedInfoTbl",
   "orderInfoTbl": "orderInfoTbl",
@@ -30,45 +33,45 @@ const config = {
     status_successed: "success"
   },
   nftMetadatas:{
-    500001: {
+    90001: {
       name: 'Golden Metropolis',
       description: `In a gleaming cityscape where the boundaries of reality blur, a golden metropolis towers against a teal sky, its mirrored reflection creating a portal to a dreamlike world. Geometric shapes and floating clouds hint at an existence suspended between fantasy and the surreal, a city both familiar and otherworldly.`
     },
-    500002: {
+    90002: {
       name: "Fiery Silhouette",
       description: `A lone figure stands at the edge of transformation, emerging from a vibrant inferno of reds and oranges. This silhouette wrestles with inner turmoil, caught in a moment of metamorphosis where fire becomes a force of renewal and rebirth.●"The Forest" - Beneath a darkened canopy of towering trees, a mysterious path winds through a dense, monochromatic forest. Golden light filters through from a distant sky, marking either the beginning or end of a journey through this eerie and secluded woodland.`
     },
-    500003: {
+    90003: {
       name: "The Forest",
       description: `Beneath a darkened canopy of towering trees, a mysterious path winds through a dense, monochromatic forest. Golden light filters through from a distant sky, marking either the beginning or end of a journey through this eerie and secluded woodland.`
     },
-    500004: {
+    90004: {
       name: 'City Collage',
       description: `A colorful, abstract representation of a city skyline created through a collage technique. Various geometric shapes in different colors and patterns are arranged to form buildings of different heights. The overall effect is playful and vibrant, with a large orange circle representing the sun in the upper left corner.`
     },
 
-    500005: {
+    90005: {
       name:"The Gates",
       description: `A majestic bronze panel stands as a portal to a golden, illuminated interior. Intricate human figures in classical relief suggest ancient tales and timeless stories, echoing the grand artistry of Renaissance masterpieces like Ghiberti’s Gates of Paradise`
     },
-    500006: {
+    90006: {
       name :"Pathway",
       description: `This digital artwork depicts a solitary figure walking on a wooden path through a surreal, cosmic landscape. The sky is filled with vibrant colors, from deep blues to fiery oranges, and countless points of light resembling stars. Vertical lines of light stretch from the ground to the sky, creating a magical, otherworldly atmosphere.`
     },
-    500007: {
+    90007: {
       name: "Time Spiral",
       description: `This sepia-toned digital image shows a man's silhouette standing before a large spiral structure. The man stands before this  monumental spiral of architecture, a vast cityscape stretching into infinity. The spiral, representing the cyclical nature of time and progress, draws him into its depths, suggesting an endless journey through the evolving landscape of human creation.`
     },
-    500008: {
+    90008: {
       name: "Bread of Life",
       description: `In a barren, desolate world, a hand emerges from the dry earth, holding a slice of bread. Against the backdrop of a dramatic sunset, this surreal image contrasts nourishment with desolation, reflecting themes of survival and the fragility of life in a harsh environment.`
     },
 
-    500009: {
+    90009: {
       name: "The Human Wheel",
       description: `Another intricate bronze sculpture depicts the eternal cycle of human existence. With scenes of life and figures etched into the outer ring, and a golden central figure, this artwork captures the profound interconnectedness of humanity's stories across time.`
     },
-    500010: {
+    90010: {
       name: "The Scholar",
       description: `A green-skinned alien scholar stands in an academic setting, poring over an ancient book. With its glasses and robes, this alien character suggests a vast intergalactic knowledge, blending familiar scholarly imagery with a sense of the fantastical.`
     },
