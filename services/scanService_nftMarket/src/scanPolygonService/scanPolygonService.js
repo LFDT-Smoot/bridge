@@ -11,6 +11,8 @@ const _ = require("lodash");
 let frameworkService = require("../frameworkService/frameworkService");
 const ScanChainBase = require("../scanChainBase/scanChainBase");
 
+let Contract = require("../contract/Contract.js");
+
 module.exports = class ScanPolygonService extends ScanChainBase{
   constructor(){
     super("MATIC");
@@ -46,47 +48,62 @@ module.exports = class ScanPolygonService extends ScanChainBase{
 
   async scanChain(blockNumber) {
     //console.log("scanChain chainType:", this.chainType, "blockNumber:", blockNumber);
+    let block = await this.web3.eth.getBlock(blockNumber);
+    let txTimestamp = block.timestamp * 1000;
+
     let filterValue = {
       fromBlock: blockNumber,
       toBlock: blockNumber,
       topics: [],
-      address: this.config.nftMarketAddr.toLowerCase()
+      address: [this.config.gatewayAddr.toLowerCase()]
     };
+
     let eventLogs = await this.web3.eth.getPastLogs(filterValue);
+    let map_txhash = new Map();
+    for(let idx_tx = 0; idx_tx < eventLogs.length; ++idx_tx) {
+      map_txhash.set(eventLogs[idx_tx].transactionHash, "");
+    }
 
-    let logs = [];
-    eventLogs.filter((log) => {
-      if (!this.eventSignatures[log.topics[0]]) {
-        return;
+    for(let txhash of map_txhash.keys()) {
+      let receipt = await this.web3.eth.getTransactionReceipt(txhash);
+      // ÏÈ¶ÁÈ¡taskId
+      let taskId;
+      for(let idx_gateway = 0; idx_gateway < receipt.logs.length; ++idx_gateway) {
+        let log = receipt.logs[idx_gateway];
+        if(log.address.toLowerCase() === this.config.gatewayAddr.toLowerCase()) {
+          let gateway_contract = new Contract(this.config.gatewayAbi, this.config.gatewayAddr);
+          let decode_log = gateway_contract.parseEvent(log);
+          if(decode_log.event === "InboundTaskExecuted" || decode_log.event === "OutboundTaskExecuted") {
+            taskId = decode_log.args.taskId;
+            break;
+          }
+        }
       }
-      let inputs = this.eventSignatures[log.topics[0]].abiEntry.inputs;
-      logs.push({
-        event: this.eventSignatures[log.topics[0]].abiEntry.name,
-        args: web3EthAbi.decodeLog(inputs, log.data, log.topics.slice(1)),
-        txHash: log.transactionHash,
-        blockNumber: log.blockNumber
-      });
-    });
+      if(!taskId) {
+        continue;
+      }
 
-    let block = await this.web3.eth.getBlock(blockNumber);
-    let txTimestamp = block.timestamp * 1000;
-
-    for(let idx = 0; idx < logs.length; ++idx) {
-      let log = logs[idx];
-      switch(log.event) {
-        case "OrderCreated":{
-            await this.processOrderCreated(log, txTimestamp);
+      for(let idx_nfrmarket = 0; idx_nfrmarket < receipt.logs.length; ++idx_nfrmarket) {
+        let log = receipt.logs[idx_nfrmarket];
+        if(log.address.toLowerCase() === this.config.nftMarketAddr.toLowerCase()) {
+          let nftmarket_contract = new Contract(this.config.nftMarketAbi, this.config.nftMarketAddr);
+          let decode_log = nftmarket_contract.parseEvent(log);
+          switch(decode_log.event) {
+            case "OrderCreated":{
+              await this.processOrderCreated(decode_log, txTimestamp, taskId);
+            }
+            break;
+            case "BuyOrder": {
+              await this.processBuyOrder(decode_log, txTimestamp, taskId);
+            }
+            break;
           }
-          break;
-        case "BuyOrder": {
-            await this.processBuyOrder(log, txTimestamp);
-          }
-          break;
+        }
       }
     }
   }
 
-  async processOrderCreated(log, txTimestamp) {
+  async processOrderCreated(log, txTimestamp, taskId) {
     // event OrderCreated(MessageData messageData);
     // {
     //   txHash:...
@@ -119,12 +136,13 @@ module.exports = class ScanPolygonService extends ScanChainBase{
     let configService = frameworkService.getService("ConfigService");
     let orderStatus = configService.getGlobalConfig("orderStatus");
     let whereJson = {
-      nftId : logMsg.nftId.toString(),
+      taskId : taskId,
       "status": {"$in": [orderStatus.status_listing]}
     };
 
     let updateJson = {
       "$set" : {
+        taskId : taskId,
         maticOrderKey: orderKey,
         status: orderStatus.status_onsale,
         OrderCreatedEvent: {
@@ -138,7 +156,7 @@ module.exports = class ScanPolygonService extends ScanChainBase{
 
           buyer: logMsg.buyer,
           timestamp: txTimestamp,
-          txHash: log.txHash
+          txHash: log.transactionHash
         },
         timestamp: txTimestamp,
         maticCreateOrderTime: txTimestamp,
@@ -151,10 +169,12 @@ module.exports = class ScanPolygonService extends ScanChainBase{
 
     let mongoService = frameworkService.getService("MongoDBService");
     let tblName = configService.getGlobalConfig("orderInfoTbl");
-    await mongoService.updateOne(tblName, whereJson, updateJson);
+    await mongoService.insertOrUpdateOne(tblName, whereJson, updateJson);
+    await mongoService.createIndex(tblName, { "taskId": 1 }, { "unique": true, "background": true });
+    await mongoService.createIndex(tblName, { "maticOrderKey": 1 }, { "unique": true, "background": true });
   }
 
-  async processBuyOrder(log, txTimestamp) {
+  async processBuyOrder(log, txTimestamp, taskId) {
     // event BuyOrder(bytes32 indexed orderKey, address indexed buyer, bytes nftContract, uint256 nftId, address priceToken, uint256 price, address recipient);
     // {
     //   event: 'BuyOrder',
@@ -180,7 +200,7 @@ module.exports = class ScanPolygonService extends ScanChainBase{
     let configService = frameworkService.getService("ConfigService");
     let orderStatus = configService.getGlobalConfig("orderStatus");
     let whereJson = {
-      nftId : log.args.nftId.toString(),
+      maticOrderKey : log.args.orderKey,
       "status": {"$in": [orderStatus.status_onsale, orderStatus.status_canceling]}
     };
     let updateJson = {
@@ -196,7 +216,7 @@ module.exports = class ScanPolygonService extends ScanChainBase{
           price: log.args.price.toString(),
           recipient: log.args.recipient,
           timestamp: txTimestamp,
-          txHash: log.txHash
+          txHash: log.transactionHash
         },
         timestamp: txTimestamp,
         maticBuyOrderTime: txTimestamp,
