@@ -494,6 +494,12 @@ module.exports = class StellarAgent extends abstract_base_agent{
 
     decodeEvent.chainType = this.chainType;
 
+    if(decodeEvent.event === "InboundTaskExecuted") {
+      decodeEvent.args.taskId = "0x" + decodeEvent.args.taskId.match(/.{1,2}/g).reduce((acc,char)=>acc+String.fromCharCode(parseInt(char, 16)),"");
+    }
+    else if(decodeEvent.event === "OutboundTaskExecuted") {
+      decodeEvent.args.contractAddress = Buffer.from(decodeEvent.args.contractAddress, "hex").toString("ascii");
+    }
     this.logger.debug("********************************** 0: getDecodeEventDbData ********************************** eventName:", eventName, decodeEvent.transactionHash);
 
     if (!args.xHash && !args.uniqueID) {
@@ -519,7 +525,7 @@ module.exports = class StellarAgent extends abstract_base_agent{
       if (args.functionCallData) {
         // Note: decodeEvent.address --- is the wmb-gate contract address ，It was assigned inside getScEventSync()
         // Note: args.contractAddress the peer-chain's WmbApp contract
-        decodeEvent.functionCallData = this.decodeFinalFunctionCallData(this.chainType, args.contractAddress, args.functionCallData);
+        decodeEvent.functionCallData = this.decodeFinalFunctionCallData(this.chainType, args.contractAddress, args.functionCallData, decodeEvent.event);
       }
 
       if (([].concat(this.relayEvent.src)).includes(eventName)) {
@@ -674,7 +680,7 @@ module.exports = class StellarAgent extends abstract_base_agent{
    * @param finalFuncCallDataXdrBytes a hex-string format value.
    * @returns {*} return the JSON object
    */
-  decodeFinalFunctionCallData(originChainType, wmbAppScAddress, finalFuncCallDataXdrBytes) {
+  decodeFinalFunctionCallData(originChainType, wmbAppScAddress, finalFuncCallDataXdrBytes, eventName) {
 
     const gateConverter = global.wmbConverterMgr.getWmbGateConverter(originChainType);
     let finalFuncCallDataObj = gateConverter.decodeFinalFunctionCallData(finalFuncCallDataXdrBytes); // return: {chainId: xx, contractAddress:xx, functionCallData: xx}
@@ -684,6 +690,10 @@ module.exports = class StellarAgent extends abstract_base_agent{
       throw new Error("Failed to decode final function. Because can not find matched converter.");
     }
     let funcCallDataObj = wmbAppConverter.decodeFunctionCallData(finalFuncCallDataObj.functionCallData);
+
+    if(eventName === "InboundTaskExecuted") {
+      finalFuncCallDataObj.contractAddress = "0x" + finalFuncCallDataObj.contractAddress.toString("ascii");
+    }
 
     return {
       "contractAddress": finalFuncCallDataObj.contractAddress, // original chain address

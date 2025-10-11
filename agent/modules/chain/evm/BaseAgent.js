@@ -608,7 +608,7 @@ module.exports = class BaseAgent extends abstract_base_agent {
   decodeFinalFunctionCallData(originChainType, wmbAppScAddress /* No use anymore TODO: Remove it*/, finallyFunctionCallData) {
     const gateConverter = global.wmbConverterMgr.getWmbGateConverter(originChainType);
     let decodeFinalFunctionCallDataResult = gateConverter.decodeFinalFunctionCallData(finallyFunctionCallData);
-    const wmbAppConverter = global.wmbConverterMgr.getWmbAppConverterByScAddress(originChainType, decodeFinalFunctionCallDataResult.contractAddress);
+    const wmbAppConverter = global.wmbConverterMgr.getWmbAppConverterByScAddress(originChainType, wmbAppScAddress);
     let convertResult = wmbAppConverter.decodeFunctionCallData(decodeFinalFunctionCallDataResult.functionCallData);
     console.log("convertResult is", convertResult);
     return Object.assign({}, decodeFinalFunctionCallDataResult, convertResult);

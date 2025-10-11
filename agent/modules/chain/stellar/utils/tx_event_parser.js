@@ -120,16 +120,16 @@ function get_wmb_gate_events_data(events, expected_contractId, expected_topics) 
       // const taskId = Buffer.from(JSON.parse(taskIdHexArrayStr)).toString("hex");
       // const networkId = networkIdBigNum;
 
-      // FIXME: this only fix for xdr-v4. for xdr-v3 should not call this.
+      // TODO: this only fix for xdr-v4. for xdr-v3 should not call this.
       //  But, IMO, we can just go with this, because we actually pass the age to scan xdr-v3 format transaction.
-      const contractAddress = hexToAscii(contractAddressHexArrayStr);
+      // const contractAddress = hexToAscii(contractAddressHexArrayStr);
 
       result.push({
         event: matchedEventName, // event name, such as 'OutboundTaskExecuted', 'CrosschainFunctionCall'
         args:{
           "taskId" : taskIdHexArrayStr,
           "networkId": networkIdBigNum,  // of peer chain
-          "contractAddress": contractAddress, // on peer chain
+          "contractAddress": contractAddressHexArrayStr, // on peer chain
           "functionCallData": finalFuncCallDataHexArrayStr,
         },
       })

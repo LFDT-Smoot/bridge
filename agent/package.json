@@ -13,29 +13,20 @@
     ]
   },
   "scripts": {
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
-  },
-  "jest": {
-    "moduleNameMapper": {
-      "^@root/(.*)$": "<rootDir>/$1",
-      "^@framework/(.*)$": "<rootDir>/framework/$1",
-      "^@modules/(.*)$": "<rootDir>/modules/$1"
-    }
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "_moduleAliases": {
-    "@root": ".",
-    "@framework": "framework/",
-    "@modules": "modules/"
+    "@root"      : ".",
+    "@framework"    : "framework/",
+    "@modules"      : "modules/"
   },
   "dependencies": {
     "@ethereumjs/tx": "^5.0.0",
-    "@stellar/stellar-sdk": "14.0.0-rc.3",
-    "@stellar/stellar-xdr-json": "23.0.0-rc.1",
+    "@stellar/stellar-sdk": "^14.2.0",
+    "@stellar/stellar-xdr-json": "^23.0.0",
     "abort-controller": "^3.0.0",
     "axios": "^1.7.2",
     "bip44-constants": "^313.0.0",
@@ -51,8 +42,5 @@
     "web3": "1.10.4",
     "winston": "^3.3.3",
     "winston-daily-rotate-file": "^3.3.2"
-  },
-  "devDependencies": {
-    "jest": "^30.0.5"
   }
 }
