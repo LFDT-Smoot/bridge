@@ -1,4 +1,4 @@
-import { Contract, SorobanRpc, TransactionBuilder, Networks, BASE_FEE, Address, nativeToScVal, xdr } from "@stellar/stellar-sdk";
+import { Contract, SorobanRpc, rpc, TransactionBuilder, Networks, BASE_FEE, Address, nativeToScVal, xdr } from "@stellar/stellar-sdk";
 import * as tool from "../../utils/tool.js";
 
 export default class StellarService {
@@ -8,7 +8,7 @@ export default class StellarService {
     let chainInfo = chainInfoService.getChainInfoByName("Stellar");
     this.chainInfo = chainInfo;
     this.rpc = chainInfo.rpc;
-    this.server = new SorobanRpc.Server(chainInfo.rpc);
+    this.server = new rpc.Server(chainInfo.rpc);
     this.marketSc = new Contract(chainInfo.marketScAddr);
     this.wmbSc = new Contract(chainInfo.wmbScAddr);
   }
