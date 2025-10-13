@@ -597,7 +597,7 @@ module.exports = class BaseAgent extends abstract_base_agent {
     return decodeEvent.args.value ? decodeEvent.args.value.toString(10) : decodeEvent.args.value;
   }
 
-  encodeFinalFunctionCallData(chainType, wmbAppScAddress /* No use anymore TODO: Remove it*/, functionCallData) {
+  encodeFinalFunctionCallData(chainType, wmbAppScAddress, functionCallData) {
     const gateConverter = global.wmbConverterMgr.getWmbGateConverter(chainType);
     const wmbAppConverter = global.wmbConverterMgr.getWmbAppConverterByScAddress(chainType, functionCallData.contractAddress);
     wmbAppConverter.setConvertContract(functionCallData.method);
@@ -605,7 +605,7 @@ module.exports = class BaseAgent extends abstract_base_agent {
     return gateConverter.encodeFinalFunctionCallData(functionCallData.networkId, functionCallData.contractAddress, encodeFunctionCallDataResult);
   }
 
-  decodeFinalFunctionCallData(originChainType, wmbAppScAddress /* No use anymore TODO: Remove it*/, finallyFunctionCallData) {
+  decodeFinalFunctionCallData(originChainType, wmbAppScAddress, finallyFunctionCallData) {
     const gateConverter = global.wmbConverterMgr.getWmbGateConverter(originChainType);
     let decodeFinalFunctionCallDataResult = gateConverter.decodeFinalFunctionCallData(finallyFunctionCallData);
     const wmbAppConverter = global.wmbConverterMgr.getWmbAppConverterByScAddress(originChainType, wmbAppScAddress);
