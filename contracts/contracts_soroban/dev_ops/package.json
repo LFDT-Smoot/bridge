@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@stellar/stellar-sdk": "^13.3.0",
+    "@stellar/stellar-sdk": "^14.2.0",
     "bip39": "^3.1.0",
     "ethereumjs-util": "6.2.1",
     "ethers": "^5.8.0"
