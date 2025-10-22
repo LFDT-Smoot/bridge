@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@stellar/stellar-sdk": "^12.1.0",
+    "@stellar/stellar-sdk": "^14.2.0",
     "dotenv": "^16.4.5",
     "elliptic": "^6.5.5",
     "express": "^4.19.2",

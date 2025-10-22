@@ -19,6 +19,10 @@ let config = {
         //message_bridge:"CB2H4YDRDJR5BQEYGT76VVJH2FXA54AB6ZWCVX5OVVTVUAVCII7HVGHB", //
         message_bridge: "CBKMVI6XU7AQ4VS3OCLT2JYLOQN5Y3V2PABFKXI7LLCNC327MGQAD7ZA", //
     },
+    peerEvm:{
+        chainId: 2147484614,   //matic
+        scAddr:'B9b35117b4d0124C893f9505F5a3C9e69144a3e2'   // peer evm - NftMarket address: 0xB9b35117b4d0124C893f9505F5a3C9e69144a3e2
+    },
     cur_nft_id:50001,
     secp256k1:{
         user1:{

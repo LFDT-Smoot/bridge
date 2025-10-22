@@ -80,8 +80,8 @@ const checkTrustAddress = async ()=> {
 
 
 const main = async () => {
-    //await getStellarScAddr();
-    //await updateStellarContractAddress();
+    await updateStellarContractAddress();
+    await getStellarScAddr();
     await updateTrustAddress();
     await checkTrustAddress();
 }

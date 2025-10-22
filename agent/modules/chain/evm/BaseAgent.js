@@ -599,7 +599,7 @@ module.exports = class BaseAgent extends abstract_base_agent {
 
   encodeFinalFunctionCallData(chainType, wmbAppScAddress, functionCallData) {
     const gateConverter = global.wmbConverterMgr.getWmbGateConverter(chainType);
-    const wmbAppConverter = global.wmbConverterMgr.getWmbAppConverterByScAddress(chainType, wmbAppScAddress);
+    const wmbAppConverter = global.wmbConverterMgr.getWmbAppConverterByScAddress(chainType, functionCallData.contractAddress);
     wmbAppConverter.setConvertContract(functionCallData.method);
     let encodeFunctionCallDataResult = wmbAppConverter.encodeFunctionCallData(functionCallData.messageData);
     return gateConverter.encodeFinalFunctionCallData(functionCallData.networkId, functionCallData.contractAddress, encodeFunctionCallDataResult);
@@ -607,8 +607,8 @@ module.exports = class BaseAgent extends abstract_base_agent {
 
   decodeFinalFunctionCallData(originChainType, wmbAppScAddress, finallyFunctionCallData) {
     const gateConverter = global.wmbConverterMgr.getWmbGateConverter(originChainType);
-    const wmbAppConverter = global.wmbConverterMgr.getWmbAppConverterByScAddress(originChainType, wmbAppScAddress);
     let decodeFinalFunctionCallDataResult = gateConverter.decodeFinalFunctionCallData(finallyFunctionCallData);
+    const wmbAppConverter = global.wmbConverterMgr.getWmbAppConverterByScAddress(originChainType, wmbAppScAddress);
     let convertResult = wmbAppConverter.decodeFunctionCallData(decodeFinalFunctionCallDataResult.functionCallData);
     console.log("convertResult is", convertResult);
     return Object.assign({}, decodeFinalFunctionCallDataResult, convertResult);

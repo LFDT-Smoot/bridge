@@ -25,8 +25,8 @@
   },
   "dependencies": {
     "@ethereumjs/tx": "^5.0.0",
-    "@stellar/stellar-sdk": "14.0.0-rc.3",
-    "@stellar/stellar-xdr-json": "23.0.0-rc.1",
+    "@stellar/stellar-sdk": "^14.2.0",
+    "@stellar/stellar-xdr-json": "^23.0.0",
     "abort-controller": "^3.0.0",
     "axios": "^1.7.2",
     "bip44-constants": "^313.0.0",

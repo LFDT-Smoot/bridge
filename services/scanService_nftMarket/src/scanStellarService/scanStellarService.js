@@ -84,25 +84,38 @@ module.exports = class ScanStellarService extends ScanChainBase {
       }
 
       const txEvents = await eventParser(txMeta);
-      if(txEvents) {
-        for(let idx_event = 0; idx_event < txEvents.length; ++idx_event) {
-          let event = txEvents[idx_event];
-          if(event.contractId === this.config.nftMarketAddr) {
-            let date = new Date(tx.created_at);
-            let msTime = date.getTime();
-            await this.process_nftMarket_event(event, tx.source_account, tx.id, msTime, blockNumber);
+      if(!txEvents) {
+        continue;
+      }
+
+      // gateway event
+      let resultEvents = get_wmb_gate_events_data(txEvents, this.config.gatewayAddr, ["OutboundTaskExecuted", "InboundTaskExecuted"]);
+      if(resultEvents.length <= 0) {
+        continue;
+      }
+
+      let ev = resultEvents[0];
+
+      ev.args.taskId = hexAdd0x(ev.args.taskId);
+
+      for(let idx_event = 0; idx_event < txEvents.length; ++idx_event) {
+        let event = txEvents[idx_event];
+
+        if (event.contractId === this.config.nftMarketAddr) {
+          let date = new Date(tx.created_at);
+          let msTime = date.getTime();
+          await this.process_nftMarket_event(event, tx.source_account, tx.id, msTime, blockNumber, ev.args.taskId);
+        }
+        else if(event.contractId === this.config.nftContractAddr) {
+          const firstTopic = getValue(event.topics[0]);
+          if("mint" === firstTopic) {
+            await this.process_nft_mint_event(event);
           }
-          else if(event.contractId === this.config.nftContractAddr) {
-            const firstTopic = getValue(event.topics[0]);
-            if("mint" === firstTopic) {
-              await this.process_nft_mint_event(event);
-            }
-            else if("burn" === firstTopic) {
-              await this.process_nft_burn_event(event);
-            }
-            else if("transfer" === firstTopic) {
-              await this.process_nft_transfer_event(event);
-            }
+          else if("burn" === firstTopic) {
+            await this.process_nft_burn_event(event);
+          }
+          else if("transfer" === firstTopic) {
+            await this.process_nft_transfer_event(event);
           }
         }
       }
@@ -150,16 +163,7 @@ module.exports = class ScanStellarService extends ScanChainBase {
   }
 
   async process_nft_transfer_event(event) {
-    const [ _eventNameObj, _fromAddrObj, toAddrObj] = event.topics;
-
-    if(getValue(_eventNameObj) !== "transfer") {
-      return;
-    }
-    const nftIdObj = event.data;
-    if(!isPlainObject(nftIdObj)) {
-      console.log("process_nft_transfer_event(), invalid data: ", event.data);
-      return;
-    }
+    const [ _adminAddrObj, toAddrObj, nftIdObj] = event.data;
     let toAddr = getValue(toAddrObj);
     let nftId = getValue(nftIdObj);
 
@@ -179,7 +183,7 @@ module.exports = class ScanStellarService extends ScanChainBase {
     await mongoService.updateOne(tblName, whereJson, updateJson);
   }
 
-  async process_nftMarket_event(event, fromAddr, txId, txDate, blockNumber) {
+  async process_nftMarket_event(event, fromAddr, txId, txDate, blockNumber, taskId) {
     let expected_topics = ["CreateOrder","CancelOrder", "OrderSuccess", "CancelSuccess"];
     const actualTopics = event.topics;
     let bTopicMatched = false;
@@ -193,6 +197,19 @@ module.exports = class ScanStellarService extends ScanChainBase {
 
     if(bTopicMatched) {
 
+      {
+        //**********************************************************************
+        // ÒòÎªºÏÔŒŽúÂëÖÐ²ÐÁôÁœŸäÈçÏÂµÄ²âÊÔŽúÂë£¬ÐèÌØÊâŽŠÀí
+        // env.events().publish(("CancelOrder",), ("1111"));
+        // sender.require_auth();
+        // env.events().publish(("CancelOrder",), ("2222"));
+        if(event.topics[0].string === "CancelOrder" ) {
+          if(!Array.isArray(event.data)) {
+            return;
+          }
+        }
+        //**********************************************************************
+      }
       const [orderKeyObj, messageDataNode] = event.data;
 
       const orderKeyStr = getValue(orderKeyObj);
@@ -202,16 +219,16 @@ module.exports = class ScanStellarService extends ScanChainBase {
       messageData.orderKey = orderKeyStr;
 
       if(messageData.messageType === "CreateOrder") {
-        await this.processCreateOrder(messageData, fromAddr, txId, txDate, blockNumber);
+        await this.processCreateOrder(messageData, fromAddr, txId, txDate, blockNumber, taskId);
       }
       else if(messageData.messageType === "CancelOrder") {
-        await this.processCancelOrder(messageData, txId, txDate, blockNumber);
+        await this.processCancelOrder(messageData, txId, txDate, blockNumber, taskId);
       }
       else if(messageData.messageType === "OrderSuccess") {
-        await this.processOrderSuccess(messageData, txId, txDate, blockNumber);
+        await this.processOrderSuccess(messageData, txId, txDate, blockNumber, taskId);
       }
       else if(messageData.messageType === "CancelSuccess") {
-        await this.processCancelSuccess(messageData, txId, txDate, blockNumber);
+        await this.processCancelSuccess(messageData, txId, txDate, blockNumber, taskId);
       }
     }
   }
@@ -236,7 +253,7 @@ module.exports = class ScanStellarService extends ScanChainBase {
     }
   }
 
-  async processCreateOrder(ev, fromAddr, txId, txDate, blockNumber) {
+  async processCreateOrder(ev, fromAddr, txId, txDate, blockNumber, taskId) {
     // processCreateOrder ev: {
     //   buyer: 'GDH2EJSEBJNTIDYACUSZ3GIAQOTIMPZFXDR64S43FABLA2NOVJSA33H4',
     //   messageType: 'CreateOrder',
@@ -252,6 +269,7 @@ module.exports = class ScanStellarService extends ScanChainBase {
     let orderStatus = configService.getGlobalConfig("orderStatus");
 
     let insertJson = {
+      taskId: taskId,
       nftContract: ev.nftContract,
       nftId: ev.nftId,
       priceToken: ev.priceToken,
@@ -271,9 +289,38 @@ module.exports = class ScanStellarService extends ScanChainBase {
     let mongoService = frameworkService.getService("MongoDBService");
     let tblName = configService.getGlobalConfig("orderInfoTbl");
     await mongoService.insertOne(tblName, insertJson);
+    let ret = await mongoService.insertOne(tblName, insertJson);
+    if(ret) {
+      await mongoService.createIndex(tblName, { "taskId": 1 }, { "unique": true, "background": true });
+      return ;
+    }
+
+    let whereJson = {
+      taskId: taskId
+    };
+
+    let insertOrUpdateJson = {
+      "$set":{
+        nftContract: ev.nftContract,
+        priceToken: ev.priceToken,
+        recipient: ev.recipient,
+  
+        xlmOrderKey: ev.orderKey,
+        xlmAddr: fromAddr,
+        price: ev.price,
+        xlmCreateOrder: ev,
+  
+        xlmCreateOrderTxId: txId,
+        xlmCreateOrderTime: txDate,
+        xlmCreateOrderBlockNumber: blockNumber
+      }
+    };
+
+    await mongoService.insertOrUpdateOne(tblName, whereJson, insertOrUpdateJson);
+    await mongoService.createIndex(tblName, { "taskId": 1 }, { "unique": true, "background": true });
   }
 
-  async processCancelOrder(ev, txId, txDate, blockNumber) {
+  async processCancelOrder(ev, txId, txDate, blockNumber, taskId) {
     // console.log("processCreateOrder ev:", ev);
     // {
     //   orderKey: '0c25199ed7e21d6ec021cc81ab48fd625bfb0b3c32817eda8289d57a1cf7bd2c',
@@ -289,7 +336,7 @@ module.exports = class ScanStellarService extends ScanChainBase {
     let orderStatus = configService.getGlobalConfig("orderStatus");
 
     let whereJson = {
-      "nftId": ev.nftId,
+      "xlmOrderKey": ev.orderKey,
       "status": {"$in": [orderStatus.status_listing, orderStatus.status_onsale]}
     };
 
@@ -311,12 +358,12 @@ module.exports = class ScanStellarService extends ScanChainBase {
     return await this.client.getLastLedgerSequence();
   }
 
-  async processOrderSuccess(ev, txId, txDate, blockNumber) {
+  async processOrderSuccess(ev, txId, txDate, blockNumber, taskId) {
     let configService = frameworkService.getService("ConfigService");
     let orderStatus = configService.getGlobalConfig("orderStatus");
 
     let whereJson = {
-      "nftId": ev.nftId,
+      "xlmOrderKey": ev.orderKey,
       "status": {"$in": [orderStatus.status_canceling, orderStatus.status_onsale]}
     };
 
@@ -334,21 +381,21 @@ module.exports = class ScanStellarService extends ScanChainBase {
     await mongoService.updateOne(tblName, whereJson, updateJson);
   }
 
-  async processCancelSuccess(ev, txId, txDate, blockNumber) {
+  async processCancelSuccess(ev, txId, txDate, blockNumber, taskId) {
     let configService = frameworkService.getService("ConfigService");
     let orderStatus = configService.getGlobalConfig("orderStatus");
 
     let whereJson = {
-      "nftId": ev.nftId,
+      "xlmOrderKey": ev.orderKey,
       "status": {"$in": [orderStatus.status_canceling]}
     };
 
     let updateJson = {
       "$set": {
         status: orderStatus.status_canceled,
-        xlmCancelFailedTxId: txId,
-        xlmCancelFailedTime: txDate,
-        xlmCancelFailedBlockNumber: blockNumber
+        xlmCancelSuccessTxId: txId,
+        xlmCancelSuccessTime: txDate,
+        xlmCancelSuccessBlockNumber: blockNumber
       }
     };
 
@@ -357,4 +404,5 @@ module.exports = class ScanStellarService extends ScanChainBase {
     await mongoService.updateOne(tblName, whereJson, updateJson);
   }
 };
+
 

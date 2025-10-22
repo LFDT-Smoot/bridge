@@ -29,7 +29,7 @@
         "CONF": {
           "nodeUrl": "https://rpc-amoy.polygon.technology",
           "agentAddr": "0x6a8299deccd420d5b6970d611afb25cc8e910220",
-          "multiSigThreshold": 1,
+          "multiSigThreshold": 2,
           "maxGasPrice": 50,
           "gasPriceDelta": 10,
           "gasLimit": 2000000,
@@ -41,7 +41,7 @@
         "CONF": {
           "nodeUrl": "https://horizon-testnet.stellar.org/",
           "agentAddr": "0x6a8299deccd420d5b6970d611afb25cc8e910220",
-          "multiSigThreshold": 1,
+          "multiSigThreshold": 2,
           "maxGasPrice": 50,
           "gasPriceDelta": 10,
           "gasLimit": 2000000,
