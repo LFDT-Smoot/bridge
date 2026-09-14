@@ -181,6 +181,26 @@ impl MessageContract {
                          source_contract_address: Address,
     ) {
         source_contract_address.require_auth();
+
+        // Defense-in-depth: allow outbound messages only to the peer (chain, contract)
+        // registered at initialization / via `change_peer_data`.
+        //
+        // Even though `source_contract_address.require_auth()` prevents spoofing the
+        // sender identity, any caller can still use *their own* authorized address to
+        // submit arbitrary (network_id, contract_address) tuples. Without this guard:
+        // 1. Persistent nonce keyspace is polluted with garbage paths (wasted rent).
+        // 2. The relayer sees spurious `CrosschainFunctionCall` events and wastes effort
+        //    trying to deliver messages to destinations that are not the configured peer.
+        // 3. Misconfigured callers (or future protocol extensions that add multiple peers
+        //    without proper guards) can accidentally send assets to wrong chains and
+        //    permanently lock them.
+        let peer_chain_data = read_peer_data(&env);
+        assert!(
+            network_id == peer_chain_data.evm_chain_id
+                && contract_address == peer_chain_data.evm_chain_sc,
+            "outbound_call: target chain/contract must match registered peer"
+        );
+
         let chain_id = read_network_id(&env);
         let finally_function_call_data = OutBoundFunctionCallData {
             functionCallData,

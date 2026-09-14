@@ -6,10 +6,32 @@ import "../interfaces/ICrosschainVerifier.sol";
 
 contract MultiSigVerifier is ICrosschainVerifier {
     using EnumerableSet for EnumerableSet.AddressSet;
- 
+
     EnumerableSet.AddressSet private owners;
 
     uint256 public threshold;
+
+    // ---------------------------------------------------------------------------
+    // Replay protection & EIP-712 typed signature domain
+    // ---------------------------------------------------------------------------
+
+    /// @dev Monotonically increasing nonce for execTransaction.
+    ///      Bumped BEFORE the external call (Checks-Effects-Interactions) so any
+    ///      attempt to replay the same signatures (even reentrantly) sees the
+    ///      nonce already consumed by `verify`.
+    uint256 public nonce;
+
+    /// @dev EIP-712 TYPE_HASH constants matching the off-chain typed-signer schema.
+    ///      This contract uses `keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)")`.
+    bytes32 private constant _DOMAIN_TYPE_HASH = keccak256(
+        "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+    );
+    bytes32 private constant _NAME_HASH    = keccak256(bytes("MultiSigVerifier"));
+    bytes32 private constant _VERSION_HASH = keccak256(bytes("1"));
+
+    bytes32 private constant _EXEC_TX_TYPE_HASH = keccak256(
+        "ExecTransaction(address to,bytes data,uint256 nonce)"
+    );
 
     modifier onlySelf() {
         require(msg.sender == address(this), "only self");
@@ -18,6 +40,7 @@ contract MultiSigVerifier is ICrosschainVerifier {
 
     event OwnerAdded(address indexed owner);
     event OwnerRemoved(address indexed owner);
+    event ExecTransactionExecuted(address indexed to, bytes data, uint256 indexed nonceUsed);
 
     constructor(address[] memory _owners, uint256 _threshold) {
         require(_owners.length > 0, "owners length must > 0");
@@ -28,6 +51,36 @@ contract MultiSigVerifier is ICrosschainVerifier {
             emit OwnerAdded(_owners[i]);
         }
         threshold = _threshold;
+        nonce = 0;
+    }
+
+    /// @dev Build the EIP-712 domain separator. Chain-specific, contract-specific,
+    ///      so identical (to, data) on a different chain or different deployment of
+    ///      this contract MUST produce a different digest and fail verification.
+    function _domainSeparatorV4() private view returns (bytes32) {
+        return keccak256(abi.encode(
+            _DOMAIN_TYPE_HASH,
+            _NAME_HASH,
+            _VERSION_HASH,
+            block.chainid,
+            address(this)
+        ));
+    }
+
+    /// @dev Compute the EIP-712 digest for an execTransaction call that is expected to
+    ///      be signed off-chain by `threshold` of the owners.
+    function hashExecTransaction(address to, bytes memory data, uint256 txNonce)
+    public
+    view
+    returns (bytes32)
+    {
+        bytes32 structHash = keccak256(abi.encode(
+            _EXEC_TX_TYPE_HASH,
+            to,
+            keccak256(data),
+            txNonce
+        ));
+        return keccak256(abi.encodePacked("\x19\x01", _domainSeparatorV4(), structHash));
     }
 
     function getOwners() public view returns (address[] memory) {
@@ -59,10 +112,31 @@ contract MultiSigVerifier is ICrosschainVerifier {
     }
 
     function execTransaction(address to, bytes calldata data, bytes memory signatures) public {
-        bytes32 dataHash = keccak256(abi.encodePacked(to, data));
-        require(verify(dataHash, signatures), "invalid signatures");
+        // --- Checks ---------------------------------------------------------------
+        // Consume the nonce *before* verifying and calling externally. This enforces
+        // Checks-Effects-Interactions: even if `to.call(data)` is malicious and tries
+        // to re-enter this function, the nonce has already been bumped so the same
+        // set of signatures cannot be reused.
+        uint256 currentNonce = nonce;
+
+        // Verify EIP-712 typed signature over (to, data, nonce).
+        // Signatures are bound to chainId + address(this) via the domain separator,
+        // which prevents replay on any other chain or any other deployment of this
+        // contract that has the same owners.
+        bytes32 typedDigest = hashExecTransaction(to, data, currentNonce);
+        require(verify(typedDigest, signatures), "invalid signatures");
+
+        // --- Effects --------------------------------------------------------------
+        // Increment the nonce immediately (strict monotonic increase) so future calls
+        // with the same (to, data) payload + same signatures MUST fail: the digest
+        // will include a different nonce and `verify` will reject.
+        nonce = currentNonce + 1;
+
+        // --- Interactions ---------------------------------------------------------
         (bool success, bytes memory returnData) = to.call(data);
         require(success, string(returnData));
+
+        emit ExecTransactionExecuted(to, data, currentNonce);
     }
 
     /// @dev verifies signatures
@@ -122,13 +196,13 @@ contract MultiSigVerifier is ICrosschainVerifier {
     /// @param pos which signature to read. A prior bounds check of this parameter should be performed, to avoid out of bounds access
     /// @param signatures concatenated rsv signatures
     function signatureSplit(bytes memory signatures, uint256 pos)
-        internal
-        pure
-        returns (
-            uint8 v,
-            bytes32 r,
-            bytes32 s
-        )
+    internal
+    pure
+    returns (
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    )
     {
         // The signature format is a compact form of:
         //   {bytes32 r}{bytes32 s}{uint8 v}
@@ -138,11 +212,11 @@ contract MultiSigVerifier is ICrosschainVerifier {
             let signaturePos := mul(0x41, pos)
             r := mload(add(signatures, add(signaturePos, 0x20)))
             s := mload(add(signatures, add(signaturePos, 0x40)))
-            // Here we are loading the last 32 bytes, including 31 bytes
-            // of 's'. There is no 'mload8' to do this.
-            //
-            // 'byte' is not working due to the Solidity parser, so lets
-            // use the second best option, 'and'
+        // Here we are loading the last 32 bytes, including 31 bytes
+        // of 's'. There is no 'mload8' to do this.
+        //
+        // 'byte' is not working due to the Solidity parser, so lets
+        // use the second best option, 'and'
             v := and(mload(add(signatures, add(signaturePos, 0x41))), 0xff)
         }
     }

@@ -308,7 +308,18 @@ contract CrosschainMessaging is ICrosschainVerifier {
     require(verifyValidatorSignatures(networkId, blockNumber, calculatedHash, proof.signatures), "Validator signatures are not valid");
     bytes memory logData = Ethereum.extractEVMEventLogData(eventData);
     (uint256 destinationId, address destinationAddress, bytes memory callParameters) = abi.decode(logData, (uint256, address, bytes));
-    return DecodedInfo(destinationId, destinationAddress, callParameters, keccak256(abi.encodePacked(encodedInfo, encodedProof)));
+
+    // Canonical replay ID: hash the EVENT body only, independent of `encodedProof`.
+    // The replay key MUST NOT depend on proof representation (signature ordering,
+    // Merkle witness ordering, leading-zero padding, etc.); otherwise equivalent
+    // valid proofs for the same source event produce different sourceHash values
+    // and bypass the usedHashes guard in CrosschainFunctionCall.inboundCall.
+    bytes32 canonicalEventId = keccak256(abi.encodePacked(
+        proof.proofData.blockHash,
+        receiptsRoot,
+        logData
+    ));
+    return DecodedInfo(destinationId, destinationAddress, callParameters, canonicalEventId);
   }
 
   /*
@@ -324,6 +335,20 @@ contract CrosschainMessaging is ICrosschainVerifier {
     Ethereum.Signature[] memory validatorSignatures
   ) public view returns (bool) {
     address[] memory validators = this.getValidatorList(networkId, blockNumber);
+
+    // --- Preconditions ----------------------------------------------------------
+    // An empty validator set means "any (including zero) signatures pass".
+    // Reject it explicitly so a zero-validator configuration can never accept a
+    // forged proof.
+    require(validators.length > 0, "Validator set is empty for this (network, block)");
+
+    // Byzantine-fault-tolerant quorum = ceil( (2/3) * N ).
+    // In integer arithmetic:  ceil(2N/3)  <=>  (2*N + 2) / 3
+    //   N=1 -> (2+2)/3=1 ; N=2 -> (4+2)/3=2 ; N=3 -> (6+2)/3=2 ; N=4 -> (8+2)/3=3
+    // This guarantees threshold >= 1 for any N >= 1, so empty signature arrays
+    // (validSeals == 0) can NEVER pass — fixes the 1-validator / 0-sig bypass.
+    uint256 threshold = (2 * validators.length + 2) / 3;
+
     uint256 validSeals = 0;
     address[50] memory addressReuseCheck;
     for (uint256 i = 0; i < validatorSignatures.length; i++) {
@@ -334,7 +359,7 @@ contract CrosschainMessaging is ICrosschainVerifier {
           // Check that a validator's signature wasn't submitted multiple times
           for (uint256 k = 0; k < i; k++) {
             if (addressReuseCheck[k] == signatureAddress) {
-              revert("Not allowed to submit multiple seals from the same validator");
+              revert("Duplicate signature from the same validator");
             }
           }
           validSeals++;
@@ -343,8 +368,8 @@ contract CrosschainMessaging is ICrosschainVerifier {
         }
       }
     }
-    if (validSeals < 2 * validators.length / 3) {
-      revert("Not enough valid validator seals");
+    if (validSeals < threshold) {
+      revert("Not enough validator signatures to meet BFT quorum");
     }
     return true;
   }
@@ -422,7 +447,12 @@ contract CrosschainMessaging is ICrosschainVerifier {
       bytes memory data = bytes.concat(a, b, c, root, d);
       sigs.signatures[i].meta = data;
     }
-    return (sigs, DecodedInfo(networkId, contractAddress, eventData.callParameters, keccak256(abi.encode(eventData))));
+
+    // Canonical replay ID for Corda trade proofs: hash the event body only (NOT
+    // encodedInfo + encodedProof), so reordering signatures or other proof
+    // encoding variants still collapse to the same usedHashes key.
+    bytes32 canonicalEventId = keccak256(abi.encode(eventData));
+    return (sigs, DecodedInfo(networkId, contractAddress, eventData.callParameters, canonicalEventId));
   }
 
   /*
@@ -508,7 +538,11 @@ contract CrosschainMessaging is ICrosschainVerifier {
       bytes memory data = bytes.concat(a, b, c, root, d);
       sigs.signatures[i].meta = data;
     }
-    return (sigs, DecodedInfo(destinationNetworkId, contractAddress, eventData.callParameters, keccak256(abi.encode(eventData))));
+
+    // Canonical replay ID for Corda tx proofs: hash the event body only, keep
+    // replay guard stable across equivalent proof representations.
+    bytes32 canonicalEventId = keccak256(abi.encode(eventData));
+    return (sigs, DecodedInfo(destinationNetworkId, contractAddress, eventData.callParameters, canonicalEventId));
   }
 
   /*

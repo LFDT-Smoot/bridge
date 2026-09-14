@@ -282,7 +282,15 @@ impl NftMarketContract {
 
     }
 
-    pub fn out_bound_call(env: Env, to_chain_id:U256, to: Bytes,data: Bytes ) {
+    fn out_bound_call(env: Env, to_chain_id:U256, to: Bytes,data: Bytes ) {
+        // Defense-in-depth: ensure target chain and contract match peer_data config.
+        // Prevents arbitrary cross-chain messages even if this function is accidentally made public in the future.
+        let peer_chain_data = read_peer_data(&env);
+        assert!(
+            to_chain_id == peer_chain_data.evm_chain_id && to == peer_chain_data.evm_chain_sc,
+            "out_bound_call: invalid target chain or contract"
+        );
+
         let gate_way_address = read_gate_way(&env);
         let gateway_client = MessageContractClient::new(&env, &gate_way_address);
         let source_contract_address = env.current_contract_address();

@@ -32,7 +32,7 @@ contract Token3643Home is WmbApp {
     );
     event ConfigTokenRemote(address tokenRemote);
 
-    
+
     function initialize(
         address _admin,
         address _wmbGateway,
@@ -65,14 +65,16 @@ contract Token3643Home is WmbApp {
         uint newBalance = IERC20(tokenAddress).balanceOf(address(this));
         uint receivedAmount = newBalance - balance;
 
+        require(receivedAmount == amount, "Token transfer failed");
+
         MessageData memory msgInfo;
         msgInfo.to = to;
-        msgInfo.amount = amount;
-        
+        msgInfo.amount = receivedAmount;
+
         outboundCall(
             remoteChainId,
             abi.encodePacked(tokenRemote),
-            abi.encode(msgInfo),         
+            abi.encode(msgInfo),
             estimateFee(remoteChainId, 300_000)
         );
 
